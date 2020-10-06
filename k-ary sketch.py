@@ -197,9 +197,9 @@ def EWMA(previous_forecast_sketch,previous_observed_sketch,alpha):
 
     Parameters
     ----------
-    forecast_sketch : KAry_Sketch
+    previous_forecast_sketch : KAry_Sketch
         A forecast sketch
-    observed_sketch : KAry_Sketch
+    previous_observed_sketch : KAry_Sketch
         An observed sketch
     alpha : float
         The alpha value to be used by the EWMA
@@ -237,14 +237,18 @@ def NSHW(previous_forecast_sketch,previous_observed_sketch,observed_sketch,previ
     previous_smoothing : KAry_Sketch
         The previous smoothing sketch
     alpha : float
-        The alpha value to be used by the EWMA
+        The alpha value to be used by the NSHW
     beta : float
-        The beta value to be used by the EWMA
-smoothing
+        The beta value to be used by the NSHW
+
     Returns
     -------
     KAry_Sketch
         The forecast sketch
+    KAry_Sketch
+        The smoothing sketch
+    KAry_Sketch
+        The trend sketch
     """
 
     depth = len(previous_observed_sketch.sketch)
