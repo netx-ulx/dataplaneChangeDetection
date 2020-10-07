@@ -386,7 +386,7 @@ def main():
             alpha = float(current_value)
         elif current_argument in ("-k", "--key"):
             print("Updating key to", current_value)
-            key = current_value.split(",")
+            key_format = current_value.split(",")
         elif current_argument in ("-p", "--path"):
             print("Updating path to", current_value)
             path = current_value
@@ -489,7 +489,8 @@ def main():
             keys.clear()
 
         #UPDATE SKETCH
-        sketch_list[-1].UPDATE(packet["key"],packet["val"])
+        #sketch_list[-1].UPDATE(packet["key"],packet["val"])
+        sketch_list[-1].UPDATE(packet["key"],1)
 
         #STORE KEY FOR CHANGE DETECTION
         keys.add(packet["key"])
