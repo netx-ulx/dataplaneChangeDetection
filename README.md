@@ -48,6 +48,21 @@ pip3 install mmh3
 ```sh
 python change.py
 ```
+Options:
+
+|    long argument | short argument | value            | default                    |
+|    ------------- |:--------------:| ---------------- | -------------------------- |
+|    `--alpha`     | `-a`           | positive float   |  0.7                       |     
+|    `--depth`     | `-d`           | positive integer |  5                         |     
+|    `--epoch`     | `-e`           | positive float   |  0.1                       |     
+|    `--fmodel`    | `-f`           | string           |  ewma                      |     
+|    `--hash`      | `-h`           | string           |  murmur3                   |     
+|    `--key`       | `-k`           | opts...          |  src,dst,sport,dport,proto |     
+|    `--path`      | `-p`           | string           |  traces/trace1.pcap        |     
+|    `--saved`     | `-s`           | positive integer |  1                         |     
+|    `--thresh`    | `-t`           | positive float   |  0.1                       |     
+|    `--width`     | `-w`           | positive integer |  5462                      |    
+
 
 * To test the application:
 ```sh
