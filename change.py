@@ -1,4 +1,4 @@
-from scapy.all import rdpcap, copy, PcapReader
+from scapy.all import *
 import mmh3
 import string
 from statistics import median
@@ -56,11 +56,25 @@ def extract(key_format,packet):
     key = []
     for elem in key_format:
         if elem == "src":
-            src = packet.src
-            key.append(src)
+            if IP in packet:
+                src = packet[IP].src
+                key.append(src)
+            elif IPv6 in packet:
+                src = packet[IPv6].src
+                key.append(src)
+            else:
+                src = packet.src
+                key.append(src)
         if elem == "dst":
-            dst = packet.dst
-            key.append(dst)
+            if IP in packet:
+                dst = packet[IP].dst
+                key.append(dst)
+            elif IPv6 in packet:
+                dst = packet[IPv6].dst
+                key.append(dst)
+            else:
+                dst = packet.dst
+                key.append(dst)
         if elem == "sport":
             try:
                 sport = packet.sport
@@ -77,7 +91,7 @@ def extract(key_format,packet):
             try:
                 proto = packet.proto
             except:
-                proto = 0
+                proto = None
             key.append(str(proto))
 
     try:
@@ -139,7 +153,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
         sketch_list.append(KAry_Sketch(kary_depth,kary_width))
 
     control = 1
-
+    result = []
     for pkt in packets:
         #EXTRACT PACKET FIELDS
         packet = extract(key_format,pkt)
@@ -147,9 +161,9 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
         #first epoch starts at the time of the first packet
         if cur_epoch == None:
             cur_epoch = packet["time"]
-
         #Check if new packet is outside the current epoch
         if cur_epoch < packet["time"] - kary_epoch:
+            part_result = None
             #Only perform change detection if t >= 2
             if control > 1:
                 #FORECASTING
@@ -166,11 +180,21 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
                 #CHANGE DETECTION
                 error_sketch, threshold = change(forecast_sketch,sketch_list[-1],T)
                 print("Threshold =", threshold, "Time:",cur_epoch)
+
+                part_result = {
+                    "epoch": [threshold,cur_epoch],
+                    "res": None,
+                }
+
+                res = []
                 #error_sketch.SHOW()
                 for key in keys:
                     estimate = error_sketch.ESTIMATE(key,hash_func)
-                    if estimate  > threshold:
+                    if estimate > threshold:
+                        res.append([key,estimate])
                         print("Change detected for:", key, "with estimate:", estimate)
+                part_result["res"] = res
+                result.append(part_result)
 
             print("Changing epoch ")
             cur_epoch = packet["time"]
@@ -186,17 +210,18 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
             keys.clear()
 
         #UPDATE SKETCH
-        sketch_list[-1].UPDATE(packet["key"],packet["val"],hash_func)
-        #sketch_list[-1].UPDATE(packet["key"],1)
+        sketch_list[-1].UPDATE(packet["key"],1,hash_func)
 
         #STORE KEY FOR CHANGE DETECTION
         keys.add(packet["key"])
 
+    return result
+
 def main():
     kary_depth = 5 #number of rows
     kary_width = 5462 #number of buckets in each row
-    kary_epoch = 0.1 #seconds per epoch
-    path = "traces/trace1.pcap" #path for the pcap file
+    kary_epoch = 10 #seconds per epoch
+    path = "traces/udp-flood-100k.pcap" #path for the pcap file
     alpha = 0.7 #alpha to be used by the EWMA and NSHW
     beta = 0.7 #beta to be used by the NSHW
     T = 0.1 #threshold used by the change detection module

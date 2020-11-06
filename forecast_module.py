@@ -28,13 +28,11 @@ def MA(sketch_list,w):
             new_forecast_sketch.sketch[i][j] = _sum / w
     return new_forecast_sketch
 
-def SMA(forecast_sketch,sketch_list,w,weigths):
+def SMA(sketch_list,w,weigths):
     """Uses the S-shaped Moving Average Model to build the forecast sketch from the list of sketches observed in the past
 
     Parameters
     ----------
-    forecast_sketch : KAry_Sketch
-        A forecast sketch
     sketch_list : list
         A list of observed sketches
     w : int

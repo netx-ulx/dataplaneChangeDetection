@@ -69,6 +69,15 @@ Options:
 python test.py
 ```
 
+* Output
+```sh
+X-hash-key-T.out
+```
+  * X - Size of the epoch used
+  * hash - hashing algorithm used
+  * key - Format of the key used
+  * T - Threshold used by the Change Detection Module
+
 <!-- CONTACT -->
 ## Contact
 
