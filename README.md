@@ -46,7 +46,7 @@ pip3 install mmh3
 ## Usage
 * To run the application:
 ```sh
-python change.py
+python main.py <filepath> [options]
 ```
 Options:
 
@@ -61,12 +61,6 @@ Options:
 |    `--saved`     | `-s`           | positive integer |  1                         |     
 |    `--thresh`    | `-t`           | positive float   |  0.1                       |     
 |    `--width`     | `-w`           | positive integer |  5462                      |    
-
-
-* To run the application:
-```sh
-python main.py <filepath> [options]
-```
 
 * Output
 ```sh
