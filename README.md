@@ -57,23 +57,23 @@ Options:
 |    `--epoch`     | `-e`           | positive float   |  0.1                       |     
 |    `--fmodel`    | `-f`           | string           |  ewma                      |     
 |    `--hash`      | `-h`           | string           |  murmur3                   |     
-|    `--key`       | `-k`           | opts...          |  src,dst,sport,dport,proto |     
-|    `--path`      | `-p`           | string           |  traces/trace1.pcap        |     
+|    `--key`       | `-k`           | opts...          |  src,dst,sport,dport,proto |        
 |    `--saved`     | `-s`           | positive integer |  1                         |     
 |    `--thresh`    | `-t`           | positive float   |  0.1                       |     
 |    `--width`     | `-w`           | positive integer |  5462                      |    
 
 
-* To test the application:
+* To run the application:
 ```sh
-python test.py
+python main.py <filepath> [options]
 ```
 
 * Output
 ```sh
-X-hash-key-T.out
+output/<filename>-<epoch>-<hash>-<key>-<T>.out
 ```
-  * X - Size of the epoch used
+  * filename - Name of the pcap file
+  * epoch - Size of the epoch used
   * hash - hashing algorithm used
   * key - Format of the key used
   * T - Threshold used by the Change Detection Module

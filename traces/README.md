@@ -1,26 +1,66 @@
 This folder contains packet traces used for the testing of our algorithm. Here follows a quick description of the traffic contained by each trace.
 
-TCP SYN Reflection 1
+Ping of Death 1
 
-	- Target IP: 192.168.1.119
+	- IP: 192.168.1.165
+	- Initial timestamp: 1527922140	
+
+Ping of Death 2
+
+	- IP: 192.168.1.248
+	- Initial timestamp: 1527938417
+
+Smurf 1
+
+	- IP: 192.168.1.118
+	- Initial timestamp: 1540283108
+
+Smurf 2
+
+	- IP: 192.168.1.248
+	- Initial timestamp: 1527965037
+
+SNMP Reflection 1 (Trace starts 6 seconds before the attack - not useful for bigger epochs)
+
+	- IP: 192.168.1.248
+	- Initial timestamp: 1528003135
+
+SNMP Reflection 2
+
+	- IP: 192.168.1.248
+	- Initial timestamp: 1527958226
+
+TCP SYN 1
+
+	- IP: 192.168.1.119
 	- Initial timestamp: 1540309095
-	- T = 0.47
-	- kary_epoch = 5
-	- key_format = ["dst","proto"]
 
+TCP SYN 2
 
-TCP SYN Reflection 2
-
-	- Target IP: 192.168.1.119
+	- IP: 192.168.1.119
 	- Initial timestamp: 1540462848
-	- T = 0.85
-	- kary_epoch = 5
-	- key_format = ["dst","proto"]
 
-UDP Flood
+TCP SYN 3
 
-	- Target IP: 192.168.1.239
+	- IP: 192.168.1.223
+	- Initial timestamp: 1527916395
+
+TCP SYN 4
+
+	- IP: 192.168.1.241
+	- Initial timestamp: 1527902817
+
+UDP Flood 1
+
+	- IP: 192.168.1.239
 	- Initial timestamp: 1540305374
-	- T = 0.25
-	- kary_epoch = 3
-	- key_format = ["dst","proto"]
+
+UDP Flood 2
+
+	- IP: 192.168.1.239
+	- Initial timestamp: 1540251009
+
+UDP Flood 3
+
+	- IP: 192.168.1.165
+	- Initial timestamp: 1527948284
