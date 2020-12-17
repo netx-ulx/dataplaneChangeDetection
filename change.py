@@ -7,6 +7,7 @@ import getopt, sys
 import binascii
 from kary_sketch import *
 from forecast_module import MA,EWMA,NSHW
+from decimal import Decimal
 
 def expand(x):
      yield x.name
@@ -193,6 +194,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
                 part_result = {
                     "epoch": [threshold,cur_epoch],
                     "res": None,
+                    "TN": 0,
                 }
 
                 complex_res = []
@@ -205,6 +207,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
                         res.append(key)
                         #print("Change detected for:", key, "with estimate:", estimate)
                 part_result["res"] = complex_res
+                part_result["numKeys"] = len(keys)
                 result.append(res)
                 complex_result.append(part_result)
 
