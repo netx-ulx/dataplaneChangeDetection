@@ -1,14 +1,14 @@
 from change import main_cycle
-from scapy.all import rdpcap
+from pcap_parser import parse
 import getopt, sys
 
 def main():
     kary_depth = 5 #number of rows
     kary_width = 5462 #number of buckets in each row
-    kary_epoch = 10 #seconds per epoch
-    alpha = 0.7 #alpha to be used by the EWMA and NSHW
+    kary_epoch = 20 #seconds per epoch
+    alpha = 0.6 #alpha to be used by the EWMA and NSHW
     beta = 0.7 #beta to be used by the NSHW
-    T = 0.1 #threshold used by the change detection module
+    T = 0.5 #threshold used by the change detection module
     s = 1 #number of past sketches saved for forecast (=1 for EWMA)
     hash_func = "murmur3" #hashing algorithm to be used by the sketch module
     forecasting_model = "ewma" #forecasting model to be used by the forecasting module
@@ -94,7 +94,9 @@ def main():
 
     original_stdout = sys.stdout 
 
-    packets = rdpcap(path)
+    packets = parse(path)
+    print("Finished parsing packets")
+
     complex_result, _ = main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets)
     with open('output/' + '/' + path[7:-5] + "-" + str(kary_epoch) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
       sys.stdout = f

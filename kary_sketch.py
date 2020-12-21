@@ -1,4 +1,3 @@
-from scapy.all import rdpcap, copy, PcapReader
 import mmh3
 import string
 from statistics import median

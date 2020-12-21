@@ -1,6 +1,6 @@
-from scapy.all import *
 import mmh3
 import string
+from copy import deepcopy
 from statistics import median
 from math import sqrt
 import getopt, sys
@@ -9,11 +9,26 @@ from kary_sketch import *
 from forecast_module import MA,EWMA,NSHW
 from decimal import Decimal
 
-def expand(x):
-     yield x.name
-     while x.payload:
-         x = x.payload
-         yield x.name
+def extract(key_format,packet):
+    key = []
+    for elem in key_format:
+        if elem == "src":
+            key.append(packet["key"]["src"])
+        if elem == "dst":
+            key.append(packet["key"]["dst"])
+        if elem == "sport":
+            key.append(packet["key"]["sport"])
+        if elem == "dport":
+            key.append(packet["key"]["dport"])
+        if elem == "proto":
+            key.append(packet["key"]["proto"])
+    
+    new_packet = {
+        "key": tuple(key),
+        "val": packet["val"],
+        "time": packet["time"]
+    }
+    return new_packet
 
 def change(forecast_sketch,observed_sketch,T):
     """Constructs the forecast error sketch and chooses an alarm threshold, based on the second moment of the forecast error sketch.
@@ -42,80 +57,6 @@ def change(forecast_sketch,observed_sketch,T):
             new_error_sketch.sketch[i][j] = observed_sketch.sketch[i][j] - forecast_sketch.sketch[i][j]
     TA = T * sqrt(new_error_sketch.ESTIMATEF2())
     return new_error_sketch, TA
-
-def extract(key_format,packet):
-    """Extracts relevant information from a packet.
-
-    Parameters
-    ----------
-    key_format : list
-        A list of key options
-    packet : RAW Packet
-        A packet from Scapy
-
-    Returns
-    -------
-    KAry_Sketch
-        The forecast error sketch
-    float
-        The threshold
-    """
-    key = []
-    for elem in key_format:
-        if elem == "src":
-            if IP in packet:
-                src = packet[IP].src
-                key.append(src)
-            elif IPv6 in packet:
-                src = packet[IPv6].src
-                key.append(src)
-            else:
-                src = packet.src
-                key.append(src)
-        if elem == "dst":
-            if IP in packet:
-                dst = packet[IP].dst
-                key.append(dst)
-            elif IPv6 in packet:
-                dst = packet[IPv6].dst
-                key.append(dst)
-            else:
-                dst = packet.dst
-                key.append(dst)
-        if elem == "sport":
-            try:
-                sport = packet.sport
-            except:
-                sport = 0
-            key.append(str(sport))
-        if elem == "dport":
-            try:
-                dport = packet.dport
-            except:
-                dport = 0
-            key.append(str(dport))
-        if elem == "proto":
-            try:
-                lst = list(filter(lambda x: x != 'Raw', list(expand(packet))))
-                lst1 = list(filter(lambda x: x != 'Padding', lst))
-                proto = lst1[-1]
-            except:
-                proto = None
-            key.append(str(proto))
-
-    try:
-        value = packet.len
-    except:
-        value = len(packet)
-        
-    time = packet.time
-    
-    packet = {
-        "key": tuple(key),
-        "val": value,
-        "time": time
-    }
-    return packet
 
 def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets):
     """Processes all packets running forecasting models and change detection mechanisms for every epoch.
@@ -219,7 +160,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
 
             #shift left, deleting first [0]
             for i in range(0,s):
-                sketch_list[i] = copy.deepcopy(sketch_list[i+1])
+                sketch_list[i] = deepcopy(sketch_list[i+1])
 
             sketch_list[-1].RESET()
             keys.clear()
@@ -229,4 +170,5 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
 
         #STORE KEY FOR CHANGE DETECTION
         keys.add(packet["key"])
+
     return complex_result, result
