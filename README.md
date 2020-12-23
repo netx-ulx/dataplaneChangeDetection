@@ -72,6 +72,31 @@ output/<filename>-<epoch>-<hash>-<key>-<T>.out
   * key - Format of the key used
   * T - Threshold used by the Change Detection Module
 
+* To test the application:
+```sh
+python test.py <filepath> [target timestamp]* [options]
+```
+or (Windows)
+```sh
+./test.bat [options]
+```
+Options:
+
+|    long argument | short argument | value            | default                    |
+|    ------------- |:--------------:| ---------------- | -------------------------- |   
+|    `--depth`     | `-d`           | positive integer |  5                         |     
+|    `--epoch`     | `-e`           | positive float   |  0.1                       |     
+|    `--fmodel`    | `-f`           | string           |  ewma                      |     
+|    `--hash`      | `-h`           | string           |  murmur3                   |       
+|    `--saved`     | `-s`           | positive integer |  1                         |     
+|    `--width`     | `-w`           | positive integer |  5462                      |    
+
+* Output
+```sh
+  Best combination: false_positives/num_epochs accuracy false_positives changes_detected [alpha, threshold, key]
+  Best Accuracy combination: false_positives/num_epochs accuracy false_positives changes_detected [alpha, threshold, key]
+```
+
 <!-- CONTACT -->
 ## Contact
 
