@@ -67,7 +67,7 @@ class KAry_Sketch:
         hash_func : string 
             The hash function to be used
         """
-
+        
         for i in range(0,self.depth):
             bucket = None
             if hash_func == "crc32":
@@ -75,6 +75,7 @@ class KAry_Sketch:
             elif hash_func == "murmur3":
                 bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
             self.sketch[i][bucket] = self.sketch[i][bucket] + value
+
 
     def ESTIMATE(self,key,hash_func):
         """Estimates the value for a given key
@@ -101,6 +102,34 @@ class KAry_Sketch:
                 bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
             result.append( (self.sketch[i][bucket] - (self.sum()/self.width)) / (1 - (1/self.width)))
         return median(result)
+
+    def QUERY(self,key,hash_func):
+        """Estimates the value for a given key
+
+        Parameters
+        ----------
+        key : tuple 
+            A five-tuple key (src,dst,sport,dport,proto)
+        hash_func : string 
+            The hash function to be used
+        
+        Returns
+        -------
+        float
+            The estimated value for a given key
+        """
+
+        result = []
+        buckets = []
+        for i in range(0,self.depth):
+            bucket = None
+            if hash_func == "crc32":
+                bucket = binascii.crc32(str.encode(','.join(key)),self.seeds[i])%self.width
+            elif hash_func == "murmur3":
+                bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
+            buckets.append(bucket)
+            result.append(self.sketch[i][bucket])
+        return result,buckets
 
     def sum(self):
         """Calculates the sum of all values in the sketch

@@ -88,6 +88,8 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
 
     """
 
+    #print("Original!")
+
     keys = set() #set used to save the keys that appeared during the epoch
     cur_epoch = None #current epoch
     forecast_sketch = None

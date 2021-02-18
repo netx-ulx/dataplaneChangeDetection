@@ -53,6 +53,13 @@ SNMP Reflection 1 - snmp-reflection-100k-1.pcap
 	- IP: 192.168.1.248
 	- Initial timestamp: 1528003135
 
+	- Ideal Parameters:
+		Best epoch: 20
+		Best alpha: 0.6
+		Best Key: ['src', 'sport', 'dst', 'dport', 'proto']
+		Best Threshold: 0.6
+		False Positives: 10
+
 SNMP Reflection 2 - snmp-reflection-100k-2.pcap
 
 	- IP: 192.168.1.248
@@ -84,8 +91,8 @@ TCP SYN 2 - tcp-syn-100k-2.pcap
 		Best epoch: 20
 		Best alpha: 0.6
 		Best Key: ['src', 'sport', 'dst', 'dport', 'proto']
-		Best Threshold: 0.5
-		False Positives: 16
+		Best Threshold: 0.8
+		False Positives: 2
 
 TCP SYN 3 - tcp-syn-100k-3.pcap
 
@@ -93,10 +100,10 @@ TCP SYN 3 - tcp-syn-100k-3.pcap
 	- Initial timestamp: 1527916395
 	- Ideal Parameters:
 		Best epoch: 20
-		Best alpha: 0.87
+		Best alpha: 0.6
 		Best Key: ['src', 'dst', 'proto']
-		Best Threshold: 0.88
-		False Positives: 0
+		Best Threshold: 0.8
+		False Positives: 3
 
 TCP SYN 4 - tcp-syn-100k-4.pcap
 
@@ -106,7 +113,7 @@ TCP SYN 4 - tcp-syn-100k-4.pcap
 		Best epoch: 20
 		Best alpha: 0.8
 		Best Key: ['src', 'dst', 'proto']
-		Best Threshold: 0.82
+		Best Threshold: 0.8
 		False Positives: 3
 
 UDP Flood 1 - udp-flood-100k-1.pcap

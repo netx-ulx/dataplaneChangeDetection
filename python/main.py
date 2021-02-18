@@ -1,4 +1,4 @@
-from change import main_cycle
+from new_change import main_cycle
 from pcap_parser import parse
 import getopt, sys
 
