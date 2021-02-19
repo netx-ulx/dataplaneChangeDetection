@@ -45,6 +45,8 @@ p4 compiler.
 - Dump the counter table of MV-Sketch via CLI of BMV2
 
     - enter the CLI 
+	    $ python controller.py --option detect
+
         ```
             $ simple_switch_CLI
         ```

@@ -10,6 +10,7 @@ else:
     count=0
     pkts=rdpcap(sys.argv[1])
     for pkt in pkts:
+        #input("Enter")
         sendp(pkt, iface="veth2")
         count+=1
         print(count)

@@ -39,15 +39,23 @@ class CMSController(object):
         self.registers.append(self.controller.register_read("sketch_flag")) 
         self.registers.append(self.controller.register_read("sketch_key0")) #src and dst ips
         self.registers.append(self.controller.register_read("sketch_key1")) #sport, dport and proto
-
+        print(".")
+        print(self.registers[3])
+        print(".")
 
     def detect_change(self):
         n=3
         if (self.registers[4][0] == 0):
-            splited = [self.registers[1][i::n] for i in range(n)]
+            splited = []
+            epoch = len(self.registers[1])/n
+            for i in range(0,n):
+                splited.append(self.registers[1][i*epoch:((i+1)*epoch)-1])
             return splited, [self.registers[5],self.registers[6]]
         else:
-            splited = [self.registers[0][i::n] for i in range(n)]
+            splited = []
+            epoch = len(self.registers[1])/n
+            for i in range(0,n):
+                splited.append(self.registers[0][i*epoch:((i+1)*epoch)-1])
             return splited, [self.registers[5],self.registers[6]]
 
 if __name__ == "__main__":

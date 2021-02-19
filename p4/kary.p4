@@ -6,7 +6,7 @@ const bit<16> TYPE_IPV4 = 0x800;
 const bit<8> IP_PROTOCOLS_TCP        =   6;
 const bit<8> IP_PROTOCOLS_UDP        =  17;
 const bit<48> EPOCH_SIZE       		 =  20000000;
-const bit<32> SKETCH_WIDTH			 =  20;
+const bit<32> SKETCH_WIDTH			 =  32;
 const bit<32> SKETCH_DEPTH			 =  3;
 
 /*************************************************************
@@ -66,7 +66,7 @@ register<bit<64>>(SKETCH_WIDTH) sketch_key1; //sport, dport, proto
 
 //sum fields
 register<bit<1>>(1) sketch_flag; // 1 bit flag for forecasting sketch selection
-register<bit<32>>(1) extra_op_counter; // counter for extra operation
+register<bit<32>>(SKETCH_DEPTH) extra_op_counter; // counter for extra operation
 register<bit<48>>(1) epoch; //timestamps require bit<48>
 
 register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) forecast_sketch0; 
@@ -95,6 +95,7 @@ struct metadata {
 
 	bit<1> ctrl;
 	bit<32> counter;
+	bit<32> offset;
 	int<32> obs;
 	int<32> err;
 	bit<48> epoch; //timestamps require bit<48>
@@ -200,22 +201,22 @@ void UpdateRow(int num, inout metadata meta) {
 			forecast_sketch1.write(meta.hash,meta.new_forecast);
 
 			//compute one extra op
-			extra_op_counter.read(meta.counter,0);
+			extra_op_counter.read(meta.counter,num);
 			if (meta.counter < SKETCH_WIDTH) {
-				control_flag.read(meta.ctrl,meta.counter); 
+				control_flag.read(meta.ctrl,meta.counter+meta.offset); 
 				if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
-					control_flag.write(meta.counter,1);
-					forecast_sketch0.read(meta.forecast,meta.counter);
+					control_flag.write(meta.counter+meta.offset,1);
+					forecast_sketch0.read(meta.forecast,meta.counter+meta.offset);
 
 					//update error
 					meta.new_err = -meta.forecast; //negative
-					error_sketch1.write(meta.counter,meta.new_err);
+					error_sketch1.write(meta.counter+meta.offset,meta.new_err);
 
 					//update forecast
 					meta.new_forecast = meta.forecast >> 1; //division by 2
-					forecast_sketch1.write(meta.counter,meta.new_forecast);
+					forecast_sketch1.write(meta.counter+meta.offset,meta.new_forecast);
 				}
-				extra_op_counter.write(0,meta.counter+1);
+				extra_op_counter.write(num,meta.counter+1);
 			}
 		}
 	} else {
@@ -251,23 +252,23 @@ void UpdateRow(int num, inout metadata meta) {
 			forecast_sketch0.write(meta.hash,meta.new_forecast);
 
 			//compute one extra op
-			extra_op_counter.read(meta.counter,0);
+			extra_op_counter.read(meta.counter,num);
 			if (meta.counter >= 0) {
-				control_flag.read(meta.ctrl,meta.counter); 
+				control_flag.read(meta.ctrl,meta.counter+meta.offset); 
 				if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
-					control_flag.write(meta.counter,0);
-					forecast_sketch1.read(meta.forecast,meta.counter);
+					control_flag.write(meta.counter+meta.offset,0);
+					forecast_sketch1.read(meta.forecast,meta.counter+meta.offset);
 
 					//update error
 					meta.new_err = -meta.forecast; //negative
-					error_sketch0.write(meta.counter,meta.new_err);
+					error_sketch0.write(meta.counter+meta.offset,meta.new_err);
 
 					//update forecast
 					meta.new_forecast = meta.forecast >> 1; //division by 2
-					forecast_sketch0.write(meta.counter,meta.new_forecast);
+					forecast_sketch0.write(meta.counter+meta.offset,meta.new_forecast);
 				}
 				if (meta.counter != 0) {
-					extra_op_counter.write(0,meta.counter-1);
+					extra_op_counter.write(num,meta.counter-1);
 				}
 			}
 		}
@@ -293,9 +294,9 @@ control MyIngress(inout headers hdr,
     //action: calculate hash functions
     //store hash index of each packet in metadata
     action cal_hash() {
-	hash(meta.hash0, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2}, 11w19);
-	hash(meta.hash1, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2}, 11w19);
-	hash(meta.hash2, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2}, 11w19);
+	hash(meta.hash0, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH);
+	hash(meta.hash1, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH);
+	hash(meta.hash2, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH);
     }
 
 
@@ -379,17 +380,24 @@ control MyIngress(inout headers hdr,
 				if (meta.flag == 0) {
 					sketch_flag.write(0,1);
 					extra_op_counter.write(0,0);
+					extra_op_counter.write(1,0);
+					extra_op_counter.write(2,0);
 				} else {
 					sketch_flag.write(0,0);
 					extra_op_counter.write(0,SKETCH_WIDTH-1);
+					extra_op_counter.write(1,SKETCH_WIDTH-1);
+					extra_op_counter.write(2,SKETCH_WIDTH-1);
 				}
 			}
 
 			meta.hash = meta.hash0;
+			meta.offset = 0;
 			UpdateRow(0,meta);
-			meta.hash = meta.hash1 + SKETCH_WIDTH;
+			meta.offset = SKETCH_WIDTH;
+			meta.hash = meta.hash1 + meta.offset;
 			UpdateRow(1,meta);
-			meta.hash = meta.hash2 + SKETCH_WIDTH + SKETCH_WIDTH;
+			meta.offset = SKETCH_WIDTH + SKETCH_WIDTH;
+			meta.hash = meta.hash2 + meta.offset;
 			UpdateRow(2,meta);
 
 			//compare candidate flow key with current flow key
