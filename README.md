@@ -22,10 +22,10 @@
 ## About The Project
 
 <!-- PYTHON IMPLEMENTATION -->
-### [Python Implementation](./python/)
+### Python Implementation [(here)](./python/)
 
 <!-- P4 IMPLEMENTATION -->
-### [P4 Implementation](./p4/)
+### P4 Implementation [(here)](./p4/)
 
 <!-- CONTACT -->
 ## Contact
