@@ -5,9 +5,9 @@
 const bit<16> TYPE_IPV4 = 0x800;
 const bit<8> IP_PROTOCOLS_TCP        =   6;
 const bit<8> IP_PROTOCOLS_UDP        =  17;
-const bit<48> EPOCH_SIZE       		 =  20000000;
-const bit<32> SKETCH_WIDTH			 =  32;
-const bit<32> SKETCH_DEPTH			 =  3;
+const bit<48> EPOCH_SIZE       		 =  20000000; // epoch size in micro-seconds
+const bit<32> SKETCH_WIDTH			 =  32; // width of the sketch
+const bit<32> SKETCH_DEPTH			 =  3; // depth of the sketch
 
 /*************************************************************
 *****************   HEADERS *********************************
@@ -59,25 +59,24 @@ header udp_t {
     bit<16> checksum;
 }
 
-//define register arrays
-//key fields
+//key fields (MV SKETCH)
 register<bit<64>>(SKETCH_WIDTH) sketch_key0; //src, dst
 register<bit<64>>(SKETCH_WIDTH) sketch_key1; //sport, dport, proto
 
-//sum fields
+//count fields (MV SKETCH)
+register<int<32>>(SKETCH_WIDTH) sketch_count; //count for the mjrty
+
+//control-aux registers
 register<bit<1>>(1) sketch_flag; // 1 bit flag for forecasting sketch selection
 register<bit<32>>(SKETCH_DEPTH) extra_op_counter; // counter for extra operation
 register<bit<48>>(1) epoch; //timestamps require bit<48>
-
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) forecast_sketch0; 
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) forecast_sketch1; 
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) error_sketch0; // value for the count sketch
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) error_sketch1; // value for the count sketch
 register<bit<1>>(SKETCH_WIDTH*SKETCH_DEPTH) control_flag; // 1 bit flag sketch
 
-
-//count fields
-register<int<32>>(SKETCH_WIDTH) sketch_count; // count for the mjrty
+//error and forecast sketches
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) forecast_sketch0; 
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) forecast_sketch1; 
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) error_sketch0;
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) error_sketch1;
 
 struct metadata {
     bit<32> hash;
@@ -164,6 +163,9 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
     apply { }
 }
 
+/*********************************************************
+***************** MAIN UPDATE FUNCTION ********************
+**********************************************************/
 
 void UpdateRow(int num, inout metadata meta) {
 	//SKETCH + FORECASTING MODULE
@@ -294,9 +296,9 @@ control MyIngress(inout headers hdr,
     //action: calculate hash functions
     //store hash index of each packet in metadata
     action cal_hash() {
-	hash(meta.hash0, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH);
-	hash(meta.hash1, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH);
-	hash(meta.hash2, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH);
+	hash(meta.hash0, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH); //hash for first row
+	hash(meta.hash1, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH); //hash for second row
+	hash(meta.hash2, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH); //hash for third row
     }
 
 
@@ -372,10 +374,11 @@ control MyIngress(inout headers hdr,
 
 			//check if new packet is inside current epoch or in the next one
 			epoch.read(meta.epoch,0);
-			if (standard_metadata.ingress_global_timestamp > meta.epoch) {
-				meta.new_epoch = standard_metadata.ingress_global_timestamp + EPOCH_SIZE;
+			if (standard_metadata.ingress_global_timestamp > meta.epoch) { //start new epoch
+				meta.new_epoch = standard_metadata.ingress_global_timestamp + EPOCH_SIZE; //new epoch = first packet + EPOCH_SIZE
 				epoch.write(0,meta.new_epoch);
 
+				//reset counters
 				sketch_flag.read(meta.flag,0);
 				if (meta.flag == 0) {
 					sketch_flag.write(0,1);
@@ -390,16 +393,23 @@ control MyIngress(inout headers hdr,
 				}
 			}
 
+			//compute offset for first row, update first row
 			meta.hash = meta.hash0;
 			meta.offset = 0;
 			UpdateRow(0,meta);
+
+			//compute offset for second row, update second row
 			meta.offset = SKETCH_WIDTH;
 			meta.hash = meta.hash1 + meta.offset;
 			UpdateRow(1,meta);
+
+			//compute offset for third row, update third row
 			meta.offset = SKETCH_WIDTH + SKETCH_WIDTH;
 			meta.hash = meta.hash2 + meta.offset;
 			UpdateRow(2,meta);
 
+
+			//MAJORITY VOTE ALGORITHM (MJRTY)
 			//compare candidate flow key with current flow key
 			meta.flag = 0;
 			sketch_key0.read(meta.tempkey1, meta.hash0);
@@ -427,6 +437,7 @@ control MyIngress(inout headers hdr,
 			}
 
 		} else { //second pass
+			//update keys
 			sketch_key0.write(meta.hash0, meta.flowkey1);
 			sketch_key1.write(meta.hash0, meta.flowkey2);
 			sketch_count.read(meta.tempcount, meta.hash0);

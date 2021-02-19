@@ -1,34 +1,42 @@
 <!-- PROJECT LOGO -->
 <p align="center">
 
-  <h3 align="center">%SOMENAME% Implementation in Python</h3>
+  <h3 align="center">Python implementation of %SOMENAME%</h3>
 
   <p align="center">
     An implementation of the %SOMENAME%.
   </p>
 </p>
 
-
-
 <!-- TABLE OF CONTENTS -->
 ## Table of Contents
 
+* [Files](#files)
 * [About the Project](#about-the-project)
 * [Getting Started](#getting-started)
   * [Prerequisites](#prerequisites)
-* [Usage](#usage)
+  * [Run](#run)
 
-
+---
+## Files
+- change.py
+- forecast-module.py: Implementation of forecasting models in python.
+- kary_sketch.py: K-ary sketch data-structure implementation.
+- main.py
+- new_change.py 
+- pcap_parser.py: .pcap file packet parser.
+- test.py
+---
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
 We used python 3.8.5 to run this application. Other versions of python should run this solution but have not been tested.
 
+<!-- PREREQUISITES -->
 ### Prerequisites
 
 The following libraries must be installed to run this program.
@@ -45,8 +53,8 @@ pip3 install mmh3
 pip3 install statistics
 ```
 
-<!-- USAGE EXAMPLES -->
-## Usage
+<!-- RUN -->
+### Run
 * To run the application:
 ```sh
 python main.py <filepath> [options]
@@ -99,9 +107,3 @@ Options:
   Best combination: false_positives/num_epochs accuracy false_positives changes_detected [alpha, threshold, key]
   Best Accuracy combination: false_positives/num_epochs accuracy false_positives changes_detected [alpha, threshold, key]
 ```
-
-<!-- CONTACT -->
-## Contact
-
-Gonçalo Matos -  goncalo.o.matos@tecnico.ulisboa.pt
-
