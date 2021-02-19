@@ -1,14 +1,12 @@
-# P4 implementation of MV-Sketch
-
+# P4 implementation of %SOMENAME%
 
 ---
 ### Files
-- p4/K-Ary\kary.p4: P4 implementation of K-ary for 5-tuple flow key
+- p4/K-Ary\kary.p4: P4 implementation of %SOMENAME% for 5-tuple flow key
 ---
 
 ### Compile and Run
-The implementations should be run on the BMV2 v1model. We show how to compile the p4 files with
-p4 compiler.
+The implementations should be run on the BMV2 v1model. We show how to compile the p4 files with the p4 compiler.
 
 #### Requirements
 - Install the p4 behavioral model (follow the steps [here](https://github.com/p4lang/behavioral-model)).
@@ -39,24 +37,12 @@ p4 compiler.
 - Send packets to the veth with the python script send.py
 
 ```
-    $ sudo ./send.py ../traces/ping-of-death-100k-1.pcap
+    $ sudo ./send.py ../traces/<filename>.pcap
 ```
 
-- Dump the counter table of MV-Sketch via CLI of BMV2
+- Run the thrift controller with python3
+    ```
+        $ python controller.py --option detect
+    ```
 
-    - enter the CLI 
-	    $ python controller.py --option detect
-
-        ```
-            $ simple_switch_CLI
-        ```
-    - dump register tables in CLI 
-        ```
-            $ register_read sketch_sum 
-            $ register_read sketch_key 
-            $ register_read sketch_count 
-        ```
-
-- Note that our implementations only include the simple forwarding rules based
-  on ingress ports. For example, packets entering from port 0 are emitted to
-  port 1. You may add your own forwarding logic in the ingress pipeline.
+- Note that our implementations only include the simple forwarding rules based on ingress ports. For example, packets entering from port 0 are emitted to port 1. You may add your own forwarding logic in the ingress pipeline.
