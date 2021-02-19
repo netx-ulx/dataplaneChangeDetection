@@ -14,8 +14,8 @@
 ## Table of Contents
 
 * [About the Project](#about-the-project)
-  * [Python Implementation](#python)
-  * [P4 Implementation](#p4)
+  * [Python Implementation](#python-implementation)
+  * [P4 Implementation](#p4-implementation)
 * [Contact](#contact)
 
 <!-- ABOUT THE PROJECT -->
