@@ -71,8 +71,8 @@ The implementations should be run on the BMV2 v1model. We show how to compile th
 ```
 
 - Run the thrift controller with python3
-    ```
-        $ python controller.py --option detect
-    ```
+```
+    $ python controller.py --option detect
+```
 
 - Note that our implementations only include the simple forwarding rules based on ingress ports. For example, packets entering from port 0 are emitted to port 1. You may add your own forwarding logic in the ingress pipeline.
