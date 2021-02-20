@@ -296,9 +296,9 @@ control MyIngress(inout headers hdr,
     //action: calculate hash functions
     //store hash index of each packet in metadata
     action cal_hash() {
-	hash(meta.hash0, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH); //hash for first row
-	hash(meta.hash1, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH); //hash for second row
-	hash(meta.hash2, HashAlgorithm.crc32, 32w0, {meta.flowkey1, meta.flowkey2, 32w0}, SKETCH_WIDTH); //hash for third row
+	hash(meta.hash0, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey1, meta.flowkey2}, SKETCH_WIDTH); //hash for first row
+	hash(meta.hash1, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey1, meta.flowkey2}, SKETCH_WIDTH); //hash for second row
+	hash(meta.hash2, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey1, meta.flowkey2}, SKETCH_WIDTH); //hash for third row
     }
 
 

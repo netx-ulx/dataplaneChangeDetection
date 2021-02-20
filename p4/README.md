@@ -75,4 +75,10 @@ The implementations should be run on the BMV2 v1model. We show how to compile th
     $ python controller.py --option detect
 ```
 
+- Run the debugger
+
+```
+    $ sudo /home/vagrant/behavioral-model/tools/nanomsg_client.py --thrift-port 9090
+```
+
 - Note that our implementations only include the simple forwarding rules based on ingress ports. For example, packets entering from port 0 are emitted to port 1. You may add your own forwarding logic in the ingress pipeline.
