@@ -146,7 +146,7 @@ control MyIngress(inout headers hdr,
 	mark_to_drop(standard_metadata);
     }
 
-    //forward all packets to the specified port
+    //forward packets to the specified port
     action set_egr(egressSpec_t port) {
 	standard_metadata.egress_spec = port;
     }
@@ -176,23 +176,6 @@ control MyIngress(inout headers hdr,
 	meta.flowkey2[39:32] = hdr.ipv4.protocol;
     }
 
-    table get_flowkey_tcp {
-	actions = {
- 	    copy_key_tcp;
-  	}
-	default_action = copy_key_tcp();
-
-    }
-
-
-    table get_flowkey_udp {
-	actions = {
- 	    copy_key_udp;
-  	}
-	default_action = copy_key_udp();
-
-    }
-
     table forward {
 	key = {
 	    standard_metadata.ingress_port: exact;
@@ -205,14 +188,6 @@ control MyIngress(inout headers hdr,
 	default_action = drop();
     }
 
-    //calculate hash values
-    table hash_index {
-	actions = {
- 	    cal_hash;
-  	}
-	default_action = cal_hash();
-    }
-
 
     apply {
 	if (hdr.ipv4.isValid()) {
@@ -220,15 +195,18 @@ control MyIngress(inout headers hdr,
 	    if (meta.repass == 0) {
 			forward.apply();
 			//construct flowkey information
+
+			// TODO - this can be generalized in the parser stage through the use of some metadata, I will explain you this trick soon
+			// so we can avoid the conditional checks and only call one action here
 			if (hdr.ipv4.protocol == IP_PROTOCOLS_TCP) {
-				get_flowkey_tcp.apply();
+				copy_key_tcp();
 			}
 			if (hdr.ipv4.protocol == IP_PROTOCOLS_UDP) {
-				get_flowkey_udp.apply();
+				copy_key_udp();
 			}
 
 			//calculate hash value
-			hash_index.apply();
+			cal_hash();
 
 			//check if new packet is inside current epoch or in the next one
 			epoch.read(meta.epoch,0);
