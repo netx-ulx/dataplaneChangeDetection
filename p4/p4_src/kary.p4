@@ -2,158 +2,16 @@
 #include <core.p4>
 #include <v1model.p4>
 
-const bit<16> TYPE_IPV4 = 0x800;
-const bit<8> IP_PROTOCOLS_TCP        =   6;
-const bit<8> IP_PROTOCOLS_UDP        =  17;
-const bit<48> EPOCH_SIZE       		 =  20000000; // epoch size in micro-seconds
-const bit<32> SKETCH_WIDTH			 =  32; // width of the sketch
-const bit<32> SKETCH_DEPTH			 =  3; // depth of the sketch
-
-/*************************************************************
-*****************   HEADERS *********************************
-**************************************************************/
-
-typedef bit<9> egressSpec_t;
-typedef bit<48> macAddr_t;
-typedef bit<32> ip4Addr_t;
-
-header ethernet_t {
-    macAddr_t dstAddr;
-    macAddr_t srcAddr;
-    bit<16> etherType;
-}
+#include "includes/constants.p4"
+#include "includes/types.p4"
+#include "includes/headers.p4"
+#include "includes/registers.p4"
 
 
-header ipv4_t {
-    bit<4>  version;
-    bit<4>  ihl;
-    bit<8>  diffserv;
-    bit<16> totalLen;
-    bit<16> identification;
-    bit<3>  flags;
-    bit<13> fragOffset;
-    bit<8>  ttl;
-    bit<8>  protocol;
-    bit<16> hdrChecksum;
-    ip4Addr_t srcAddr;
-    ip4Addr_t dstAddr;
-}
+/***************** PARSER *********************************/
 
-header tcp_t {
-    bit<16> srcPort;
-    bit<16> dstPort;
-    bit<32> seqNo;
-    bit<32> ackNo;
-    bit<4> dataOffset;
-    bit<4> res;
-    bit<8> flags;
-    bit<16> window;
-    bit<16> checksum;
-    bit<16> urgentPtr;
-}
+#include "includes/parser.p4"
 
-header udp_t {
-    bit<16> srcPort;
-    bit<16> dstPort;
-    bit<16> length_;
-    bit<16> checksum;
-}
-
-//key fields (MV SKETCH)
-register<bit<64>>(SKETCH_WIDTH) sketch_key0; //src, dst
-register<bit<64>>(SKETCH_WIDTH) sketch_key1; //sport, dport, proto
-
-//count fields (MV SKETCH)
-register<int<32>>(SKETCH_WIDTH) sketch_count; //count for the mjrty
-
-//control-aux registers
-register<bit<1>>(1) sketch_flag; // 1 bit flag for forecasting sketch selection
-register<bit<32>>(SKETCH_DEPTH) extra_op_counter; // counter for extra operation
-register<bit<48>>(1) epoch; //timestamps require bit<48>
-register<bit<1>>(SKETCH_WIDTH*SKETCH_DEPTH) control_flag; // 1 bit flag sketch
-
-//error and forecast sketches
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) forecast_sketch0; 
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) forecast_sketch1; 
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) error_sketch0;
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) error_sketch1;
-
-struct metadata {
-    bit<32> hash;
-	bit<32> hash0;
-	bit<32> hash1;
-	bit<32> hash2;
-    bit<64> flowkey1;
-    bit<64> flowkey2;
-    bit<64> tempkey1;
-    bit<64> tempkey2;
-    int<32> tempcount;
-    int<32> tempsum;
-    bit<1> repass;
-    bit<1> flag;
-
-	bit<1> ctrl;
-	bit<32> counter;
-	bit<32> offset;
-	int<32> obs;
-	int<32> err;
-	bit<48> epoch; //timestamps require bit<48>
-	bit<48> new_epoch; //timestamps require bit<48>
-	int<32> forecast;
-	int<32> aux_forecast;
-	int<32> new_forecast;
-	int<32> new_err;
-}
-
-struct headers {
-    ethernet_t ethernet;
-    ipv4_t ipv4;
-    tcp_t tcp;
-    udp_t udp;
-}
-
-
-/*********************************************************
-***************** PARSER *********************************
-**********************************************************/
-
-parser MyParser(packet_in packet,
-	 	out headers hdr,
-		inout metadata meta,
-		inout standard_metadata_t standard_metadata) {
-
-    state start {
-	transition parse_ethernet;
-    }
-
-    state parse_ethernet {
-	packet.extract(hdr.ethernet);
-	transition select(hdr.ethernet.etherType) {
-	    TYPE_IPV4: parse_ipv4;
-	    default: accept;
-	}
-    }
-
-    state parse_ipv4 {
-        packet.extract(hdr.ipv4);
-        transition select(hdr.ipv4.fragOffset, hdr.ipv4.ihl,
-                          hdr.ipv4.protocol) {
-            (13w0x0, 4w0x5, IP_PROTOCOLS_TCP): parse_tcp;
-            (13w0x0, 4w0x5, IP_PROTOCOLS_UDP): parse_udp;
-            default: accept;
-        }
-    }
-
-    state parse_tcp {
-	packet.extract(hdr.tcp);
-	transition accept;
-    }
-
-    state parse_udp {
-	packet.extract(hdr.udp);
-	transition accept;
-    }
-}
 
 /*********************************************************
 ***************** CHECKSUM VERIFICATION *******************
