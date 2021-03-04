@@ -33,11 +33,11 @@ void UpdateRow(int num, inout metadata meta) {
 		if (meta.ctrl != meta.flag) { //If equals, copy forecast_sketch
 			control_flag.write(meta.hash,1);
 			
-			forecast_sketch0.read(meta.forecast,meta.hash);
+			forecast_sketch_f1.read(meta.forecast,meta.hash);
 			
 			//update error
 			meta.new_err = 10 - meta.forecast;
-			error_sketch1.write(meta.hash,meta.new_err);
+			error_sketch_f1.write(meta.hash,meta.new_err);
 
 			//update forecast
 			meta.obs = 10 >> 1; //division by 2
@@ -45,20 +45,20 @@ void UpdateRow(int num, inout metadata meta) {
 
 			meta.new_forecast = meta.obs + meta.aux_forecast;
 
-			forecast_sketch1.write(meta.hash,meta.new_forecast);
+			forecast_sketch_f0.write(meta.hash,meta.new_forecast);
 
 		} else { //else, only update with observed
 			//update error
-			error_sketch1.read(meta.err,meta.hash);
+			error_sketch_f1.read(meta.err,meta.hash);
 			meta.new_err = meta.err + 10;
-			error_sketch1.write(meta.hash,meta.new_err);
+			error_sketch_f1.write(meta.hash,meta.new_err);
 
 			//update forecast
-			forecast_sketch1.read(meta.forecast,meta.hash);
+			forecast_sketch_f0.read(meta.forecast,meta.hash);
 			meta.obs = 10 >> 1; //division by 2
 			meta.new_forecast = meta.obs + meta.forecast;
 
-			forecast_sketch1.write(meta.hash,meta.new_forecast);
+			forecast_sketch_f0.write(meta.hash,meta.new_forecast);
 
 			//compute one extra op
 			extra_op_counter.read(meta.counter,num);
@@ -66,15 +66,15 @@ void UpdateRow(int num, inout metadata meta) {
 				control_flag.read(meta.ctrl,meta.counter+meta.offset); 
 				if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
 					control_flag.write(meta.counter+meta.offset,1);
-					forecast_sketch0.read(meta.forecast,meta.counter+meta.offset);
+					forecast_sketch_f1.read(meta.forecast,meta.counter+meta.offset);
 
 					//update error
 					meta.new_err = -meta.forecast; //negative
-					error_sketch1.write(meta.counter+meta.offset,meta.new_err);
+					error_sketch_f1.write(meta.counter+meta.offset,meta.new_err);
 
 					//update forecast
 					meta.new_forecast = meta.forecast >> 1; //division by 2
-					forecast_sketch1.write(meta.counter+meta.offset,meta.new_forecast);
+					forecast_sketch_f0.write(meta.counter+meta.offset,meta.new_forecast);
 				}
 				extra_op_counter.write(num,meta.counter+1);
 			}
@@ -84,11 +84,11 @@ void UpdateRow(int num, inout metadata meta) {
 		if (meta.ctrl != meta.flag) { //If equals, copy forecast_sketch
 			control_flag.write(meta.hash,0);
 			
-			forecast_sketch1.read(meta.forecast,meta.hash);
+			forecast_sketch_f0.read(meta.forecast,meta.hash);
 			
 			//update error
 			meta.new_err = 10 - meta.forecast;
-			error_sketch0.write(meta.hash,meta.new_err);
+			error_sketch_f0.write(meta.hash,meta.new_err);
 
 			//update forecast
 			meta.obs = 10 >> 1; //division by 2
@@ -96,20 +96,20 @@ void UpdateRow(int num, inout metadata meta) {
 
 			meta.new_forecast = meta.obs + meta.aux_forecast;
 
-			forecast_sketch0.write(meta.hash,meta.new_forecast);
+			forecast_sketch_f1.write(meta.hash,meta.new_forecast);
 
 		} else { //else, only update with observed
 			//update error
-			error_sketch0.read(meta.err,meta.hash);
+			error_sketch_f0.read(meta.err,meta.hash);
 			meta.new_err = meta.err + 10;
-			error_sketch0.write(meta.hash,meta.new_err);
+			error_sketch_f0.write(meta.hash,meta.new_err);
 
 			//update forecast
-			forecast_sketch0.read(meta.forecast,meta.hash);
+			forecast_sketch_f1.read(meta.forecast,meta.hash);
 			meta.obs = 10 >> 1; //division by 2
 			meta.new_forecast = meta.obs + meta.forecast;
 
-			forecast_sketch0.write(meta.hash,meta.new_forecast);
+			forecast_sketch_f1.write(meta.hash,meta.new_forecast);
 
 			//compute one extra op
 			extra_op_counter.read(meta.counter,num);
@@ -117,15 +117,15 @@ void UpdateRow(int num, inout metadata meta) {
 				control_flag.read(meta.ctrl,meta.counter+meta.offset); 
 				if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
 					control_flag.write(meta.counter+meta.offset,0);
-					forecast_sketch1.read(meta.forecast,meta.counter+meta.offset);
+					forecast_sketch_f0.read(meta.forecast,meta.counter+meta.offset);
 
 					//update error
 					meta.new_err = -meta.forecast; //negative
-					error_sketch0.write(meta.counter+meta.offset,meta.new_err);
+					error_sketch_f0.write(meta.counter+meta.offset,meta.new_err);
 
 					//update forecast
 					meta.new_forecast = meta.forecast >> 1; //division by 2
-					forecast_sketch0.write(meta.counter+meta.offset,meta.new_forecast);
+					forecast_sketch_f1.write(meta.counter+meta.offset,meta.new_forecast);
 				}
 				if (meta.counter != 0) {
 					extra_op_counter.write(num,meta.counter-1);
@@ -154,26 +154,26 @@ control MyIngress(inout headers hdr,
     //action: calculate hash functions
     //store hash index of each packet in metadata
     action cal_hash() {
-	hash(meta.hash0, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey1, meta.flowkey2}, SKETCH_WIDTH); //hash for first row
-	hash(meta.hash1, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey1, meta.flowkey2}, SKETCH_WIDTH); //hash for second row
-	hash(meta.hash2, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey1, meta.flowkey2}, SKETCH_WIDTH); //hash for third row
+	hash(meta.hash0, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey}, SKETCH_WIDTH); //hash for first row
+	hash(meta.hash1, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey}, SKETCH_WIDTH); //hash for second row
+	hash(meta.hash2, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey}, SKETCH_WIDTH); //hash for third row
     }
 
 
     action copy_key_tcp() {
-	meta.flowkey1[31:0] = hdr.ipv4.srcAddr;
-	meta.flowkey1[63:32] = hdr.ipv4.dstAddr;
-	meta.flowkey2[15:0] = hdr.tcp.srcPort;
-	meta.flowkey2[31:16] = hdr.tcp.dstPort;
-	meta.flowkey2[39:32] = hdr.ipv4.protocol;
+	meta.flowkey[31:0] = hdr.ipv4.srcAddr;
+	meta.flowkey[63:32] = hdr.ipv4.dstAddr;
+	//meta.flowkey2[15:0] = hdr.tcp.srcPort;
+	//meta.flowkey2[31:16] = hdr.tcp.dstPort;
+	//meta.flowkey2[39:32] = hdr.ipv4.protocol;
     }
 
     action copy_key_udp() {
-	meta.flowkey1[31:0] = hdr.ipv4.srcAddr;
-	meta.flowkey1[63:32] = hdr.ipv4.dstAddr;
-	meta.flowkey2[15:0] = hdr.udp.srcPort;
-	meta.flowkey2[31:16] = hdr.udp.dstPort;
-	meta.flowkey2[39:32] = hdr.ipv4.protocol;
+	meta.flowkey[31:0] = hdr.ipv4.srcAddr;
+	meta.flowkey[63:32] = hdr.ipv4.dstAddr;
+	//meta.flowkey2[15:0] = hdr.udp.srcPort;
+	//meta.flowkey2[31:16] = hdr.udp.dstPort;
+	//meta.flowkey2[39:32] = hdr.ipv4.protocol;
     }
 
     table forward {
@@ -208,6 +208,9 @@ control MyIngress(inout headers hdr,
 			//calculate hash value
 			cal_hash();
 
+			/********************************************************/
+			/***************** EPOCH VERIFICATION *******************/
+
 			//check if new packet is inside current epoch or in the next one
 			epoch.read(meta.epoch,0);
 			if (standard_metadata.ingress_global_timestamp > meta.epoch) { //start new epoch
@@ -229,6 +232,9 @@ control MyIngress(inout headers hdr,
 				}
 			}
 
+			/********************************************************/
+			/******************* UPDATE "CYCLE" *********************/
+
 			//compute offset for first row, update first row
 			meta.hash = meta.hash0;
 			meta.offset = 0;
@@ -245,40 +251,28 @@ control MyIngress(inout headers hdr,
 			UpdateRow(2,meta);
 
 
-			//MAJORITY VOTE ALGORITHM (MJRTY)
+			/********************************************************/
+			/*********** MAJORITY VOTE ALGORITHM (MJRTY) ************/
+
 			//compare candidate flow key with current flow key
 			meta.flag = 0;
-			sketch_key0.read(meta.tempkey1, meta.hash0);
-			if (meta.tempkey1 != meta.flowkey1) {
-				meta.flag = 1;
-			}
-			sketch_key1.read(meta.tempkey2, meta.hash0);
-			if (meta.tempkey2 != meta.flowkey2) {
-				meta.flag = 1;
-			}
-
+			srcAddr.read(meta.tempsrc, meta.hash0);
+			dstAddr.read(meta.tempdst, meta.hash0);
 			sketch_count.read(meta.tempcount, meta.hash0);
-			if (meta.flag == 1 && meta.tempcount == 0) {
-				meta.repass = 1;
-			}
-			if (meta.flag == 0) {
+			if (meta.tempsrc!= meta.flowkey[31:0] || meta.tempdst != meta.flowkey[63:32]) { //if keys are different check counter
+				if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
+					srcAddr.write(meta.hash0, meta.flowkey[31:0]);
+					dstAddr.write(meta.hash0, meta.flowkey[63:32]);
+					meta.tempcount = 1;
+					sketch_count.write(meta.hash0, meta.tempcount);
+				} else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
+					meta.tempcount = meta.tempcount - 1;
+					sketch_count.write(meta.hash0, meta.tempcount);
+				}		
+			} else { // if keys are equal increment counter by 1
 				meta.tempcount = meta.tempcount + 1;
-			} else if (meta.tempcount > 0){
-				meta.tempcount = meta.tempcount - 1;
+				sketch_count.write(meta.hash0, meta.tempcount);
 			}
-			sketch_count.write(meta.hash0, meta.tempcount);
-
-			if (meta.repass  == 1) {
-				resubmit({meta.repass, meta.flowkey1, meta.flowkey2, meta.hash0});
-			}
-
-		} else { //second pass
-			//update keys
-			sketch_key0.write(meta.hash0, meta.flowkey1);
-			sketch_key1.write(meta.hash0, meta.flowkey2);
-			sketch_count.read(meta.tempcount, meta.hash0);
-			meta.tempcount = 1 - meta.tempcount;
-			sketch_count.write(meta.hash0, meta.tempcount);
 		}
 	}
     }

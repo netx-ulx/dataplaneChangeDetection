@@ -1,18 +1,26 @@
-//key fields (MV SKETCH)
-register<bit<64>>(SKETCH_WIDTH) sketch_key0; //src, dst
-register<bit<64>>(SKETCH_WIDTH) sketch_key1; //sport, dport, proto
+//*------------------------------------------------------------------*//
+//*-----------------------------MV Sketch----------------------------*//
+//*------------------------------------------------------------------*//
 
-//count fields (MV SKETCH)
-register<int<32>>(SKETCH_WIDTH) sketch_count; //count for the mjrty
+register<bit<32>>(SKETCH_WIDTH) srcAddr;        //key field: src
+register<bit<32>>(SKETCH_WIDTH) dstAddr;        //key_field: dst
 
-//control-aux registers
-register<bit<1>>(1) sketch_flag; // 1 bit flag for forecasting sketch selection
-register<bit<32>>(SKETCH_DEPTH) extra_op_counter; // counter for extra operation
-register<bit<48>>(1) epoch; //timestamps require bit<48>
-register<bit<1>>(SKETCH_WIDTH*SKETCH_DEPTH) control_flag; // 1 bit flag sketch
+register<int<32>>(SKETCH_WIDTH) sketch_count;   //count field for the mjrty
 
-//error and forecast sketches
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) forecast_sketch0; 
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) forecast_sketch1; 
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) error_sketch0;
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) error_sketch1;
+//*------------------------------------------------------------------*//
+//*---------------------------K-Ary Sketch---------------------------*//
+//*------------------------------------------------------------------*//
+
+register<bit<1>>(1) sketch_flag;                                    // 1 bit flag for forecast sketch selection
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) forecast_sketch_f0;    //forecast sketch used when the sketch flag is 0
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) forecast_sketch_f1;    //forecast sketch used when the sketch flag is 1
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) error_sketch_f0;       //error sketch used when the sketch flag is 0
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) error_sketch_f1;       //error sketch used when the sketch flag is 1
+register<bit<1>>(SKETCH_WIDTH*SKETCH_DEPTH) control_flag;           // 1 bit control-flag sketch
+
+//*------------------------------------------------------------------*//
+//*-----------------------Application Registers----------------------*//
+//*------------------------------------------------------------------*//
+
+register<bit<48>>(1) epoch;                         //timestamps require bit<48>
+register<bit<32>>(SKETCH_DEPTH) extra_op_counter;   // counter for extra operation

@@ -59,13 +59,13 @@ class CMSController(object):
     
     def read_registers(self):
         self.registers = []
-        self.registers.append(self.controller.register_read("sketch_flag"))         #0 
-        self.registers.append(self.controller.register_read("sketch_key0"))         #1 src and dst ips
-        self.registers.append(self.controller.register_read("sketch_key1"))         #2 sport, dport and proto
+        self.registers.append(self.controller.register_read("sketch_flag"))         #0 flag
+        self.registers.append(self.controller.register_read("srcAddr"))             #1 src ips
+        self.registers.append(self.controller.register_read("dstAddr"))             #2 dst ips
         if (self.registers[0][0] == 0): #choose error sketch
-            self.registers.append(self.controller.register_read("error_sketch1"))   #3 error sketch
+            self.registers.append(self.controller.register_read("error_sketch_f1")) #3 error sketch
         else:
-            self.registers.append(self.controller.register_read("error_sketch0"))   #3 error sketch
+            self.registers.append(self.controller.register_read("error_sketch_f0")) #3 error sketch
 
 
     def detect_change(self,depth):
@@ -73,7 +73,7 @@ class CMSController(object):
         epoch = len(self.registers[3])/depth
         for i in range(0,depth):
             splited.append(self.registers[3][i*epoch:((i+1)*epoch)-1])
-        return splited, [self.registers[1],self.registers[2]]
+        return splited, self.registers[1], self.registers[2]
 
 if __name__ == "__main__":
     import argparse
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     if args.option == "detect":
         while(True):    
             controller.decode_registers()
-            error, raw_keys = controller.detect_change(args.depth)
+            error, raw_src, raw_dst = controller.detect_change(args.depth)
             error_sketch = KAry_Sketch(len(error),len(error[0]))
             error_sketch.sketch = error
             print(". Sketch Flag: " + str(controller.registers[0][0]))
@@ -100,36 +100,24 @@ if __name__ == "__main__":
             error_sketch.SHOW()
             print(".")
 
-            str_keys0 = []
-            for key in raw_keys[0]:
-                if key > 0:
-                    strkey = []
-                    numKey = []
-                    binkey = "{0:64b}".format(key).replace(" ","0")
-                    strkey.append(str(int(binkey[32:40],2))+"."+str(int(binkey[40:48],2))+"."+str(int(binkey[48:56],2))+"."+str(int(binkey[56:64],2)-1)) #get src ip
-                    strkey.append(str(int(binkey[0:8],2))+"."+str(int(binkey[8:16],2))+"."+str(int(binkey[16:24],2))+"."+str(int(binkey[24:32],2)+1)) #get dst ip
-
-                    str_keys0.append(strkey)
+            str_src = []
+            for src in raw_src:
+                if src > 0:
+                    binsrc = "{:032b}".format(src)
+                    str_src.append(str(int(binsrc[0:8],2))+"."+str(int(binsrc[8:16],2))+"."+str(int(binsrc[16:24],2))+"."+str(int(binsrc[24:32],2))) #get dst ip
                 else:
-                    str_keys0.append(["None"])
+                    str_src.append(["0"])
 
-            str_keys1 = []
-            for key in raw_keys[1]:
-                if key > 0:
-                    binkey = "{0:b}".format(key)
-                    strkey = []
-                    strkey.append(str(int(binkey[-16:],2)-1)) #get the src port
-                    strkey.append(str(int(binkey[-32:-16],2))) #get the dst port
-                    strkey.append(str(int(binkey[-40:-32],2)+1)) #get protocol
-
-                    str_keys1.append(strkey)
+            str_dst = []
+            for dst in raw_dst:
+                if dst > 0:
+                    bindst = "{:032b}".format(dst)
+                    str_dst.append(str(int(bindst[0:8],2))+"."+str(int(bindst[8:16],2))+"."+str(int(bindst[16:24],2))+"."+str(int(bindst[24:32],2))) #get dst ip
                 else:
-                    str_keys1.append(["None"])
+                    str_dst.append(["0"])
 
-            keys = []
-            for i in range(0,len(raw_keys[0])):
-                keys.append(str_keys0[i] + str_keys1[i])
-                print("Key " + str(i) + ": " + str(str_keys0[i] + str_keys1[i]))
+            for i in range(0,len(str_dst)):
+                print("Key " + str(i) + ": " + str(str_src[i]) + "," + str(str_dst[i]))
 
             print(".")
             print(".^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.")

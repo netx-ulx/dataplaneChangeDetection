@@ -49,10 +49,10 @@ struct metadata {
 	bit<32> hash0;
 	bit<32> hash1;
 	bit<32> hash2;
-    bit<64> flowkey1;
-    bit<64> flowkey2;
-    bit<64> tempkey1;
-    bit<64> tempkey2;
+    bit<64> key;
+    bit<64> flowkey;
+    bit<32> tempsrc;
+    bit<32> tempdst;
     int<32> tempcount;
     int<32> tempsum;
     bit<1> repass;
