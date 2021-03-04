@@ -46,16 +46,13 @@ class CMSController(object):
            This solution includes a very basic statistic, with the number of flows inside the confidence bound.
         """
         self.read_registers()
-        new_registers = []
-        for register in self.registers:
-            aux = []
-            for value in register:
-                if value > 4000000000:
-                    aux.append(value - self.max_int)
-                else:
-                    aux.append(value)
-            new_registers.append(aux)
-        self.registers = new_registers
+        aux = []
+        for value in self.registers[3]: #check values inside error_sketch
+            if value > 4000000000:
+                aux.append(value - self.max_int)
+            else:
+                aux.append(value)
+        self.registers[3] = aux
     
     def read_registers(self):
         self.registers = []
