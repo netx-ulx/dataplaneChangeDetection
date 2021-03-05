@@ -78,7 +78,7 @@ class CMSController(object):
         splited = []
         width = len(self.registers[3])/depth
         for i in range(0,depth):
-            splited.append(self.registers[3][i*width:((i+1)*width)-1])
+            splited.append(self.registers[3][i*width:((i+1)*width)])
         return splited, self.registers[1], self.registers[2]
 
 if __name__ == "__main__":
