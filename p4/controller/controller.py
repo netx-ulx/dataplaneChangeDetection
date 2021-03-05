@@ -132,6 +132,18 @@ if __name__ == "__main__":
             for i in range(0,len(str_dst)):
                 print("Key " + str(i) + ": " + str(str_src[i]) + "," + str(str_dst[i]) + " ::: " + str(indexes[i]))
 
+            T = 0.1
+            #Compute threshold
+            TA = T * sqrt(error_sketch.ESTIMATEF2())
+
+            #Estimate error for each key
+            for i in range(0,len(indexes)):
+                if str_src[i] != "0":
+                    estimate = error_sketch.ESTIMATE(indexes[i])
+                    if estimate > TA:
+                        print("Change detected for:", str_src[i] + "," + str_dst[i], "with estimate:", estimate)
+
+
             print(".")
             print(".^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.")
             print(".")

@@ -55,28 +55,7 @@ class KAry_Sketch:
         for i in range(0,depth):
             self.seeds.append(mmh3.hash64("K-ARY SKETCH",i)[0])
 
-    def UPDATE(self,key,value,hash_func):
-        """Updates the sketch with the value for a given key
-
-        Parameters
-        ----------
-        key : tuple 
-            A five-tuple key (src,dst,sport,dport,proto)
-        value : float 
-            The value to be updated
-        hash_func : string 
-            The hash function to be used
-        """
-
-        for i in range(0,self.depth):
-            bucket = None
-            if hash_func == "crc32":
-                bucket = binascii.crc32(str.encode(','.join(key)),self.seeds[i])%self.width
-            elif hash_func == "murmur3":
-                bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
-            self.sketch[i][bucket] = self.sketch[i][bucket] + value
-
-    def ESTIMATE(self,key,hash_func):
+    def ESTIMATE(self,buckets):
         """Estimates the value for a given key
 
         Parameters
@@ -94,12 +73,8 @@ class KAry_Sketch:
 
         result = []
         for i in range(0,self.depth):
-            bucket = None
-            if hash_func == "crc32":
-                bucket = binascii.crc32(str.encode(','.join(key)),self.seeds[i])%self.width
-            elif hash_func == "murmur3":
-                bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
-            result.append( (self.sketch[i][bucket] - (self.sum(i)/self.width)) / (1 - (1/self.width)))
+            bucket = buckets[i]
+            result.append((self.sketch[i][bucket] - (self.sum(i)/self.width)) / (1 - (1/self.width)))
         return median(result)
 
     def sum(self,i):
