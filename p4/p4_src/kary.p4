@@ -154,9 +154,9 @@ control MyIngress(inout headers hdr,
     //action: calculate hash functions
     //store hash index of each packet in metadata
     action cal_hash() {
-	hash(meta.hash0, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey}, SKETCH_WIDTH); //hash for first row
-	hash(meta.hash1, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey}, SKETCH_WIDTH); //hash for second row
-	hash(meta.hash2, HashAlgorithm.crc32_custom, 32w0, {meta.flowkey}, SKETCH_WIDTH); //hash for third row
+	hash(meta.hash0, HashAlgorithm.crc32_custom, 32w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for first row
+	hash(meta.hash1, HashAlgorithm.crc32_custom, 32w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for second row
+	hash(meta.hash2, HashAlgorithm.crc32_custom, 32w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for third row
     }
 
 

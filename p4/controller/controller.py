@@ -64,12 +64,21 @@ class CMSController(object):
         else:
             self.registers.append(self.controller.register_read("error_sketch_f0")) #3 error sketch
 
+    def flow_to_bytestream(self, flow):
+        return socket.inet_aton(flow[0]) + socket.inet_aton(flow[1])
+
+    def get_index(self, flow, width):
+        values = []
+        for i in range(self.register_num):
+            index = self.hashes[i].bit_by_bit_fast((self.flow_to_bytestream(flow))) % width
+            values.append(index)
+        return values
 
     def detect_change(self,depth):
         splited = []
-        epoch = len(self.registers[3])/depth
+        width = len(self.registers[3])/depth
         for i in range(0,depth):
-            splited.append(self.registers[3][i*epoch:((i+1)*epoch)-1])
+            splited.append(self.registers[3][i*width:((i+1)*width)-1])
         return splited, self.registers[1], self.registers[2]
 
 if __name__ == "__main__":
@@ -103,7 +112,7 @@ if __name__ == "__main__":
                     binsrc = "{:032b}".format(src)
                     str_src.append(str(int(binsrc[0:8],2))+"."+str(int(binsrc[8:16],2))+"."+str(int(binsrc[16:24],2))+"."+str(int(binsrc[24:32],2))) #get dst ip
                 else:
-                    str_src.append(["0"])
+                    str_src.append("0")
 
             str_dst = []
             for dst in raw_dst:
@@ -111,10 +120,17 @@ if __name__ == "__main__":
                     bindst = "{:032b}".format(dst)
                     str_dst.append(str(int(bindst[0:8],2))+"."+str(int(bindst[8:16],2))+"."+str(int(bindst[16:24],2))+"."+str(int(bindst[24:32],2))) #get dst ip
                 else:
-                    str_dst.append(["0"])
+                    str_dst.append("0")
+
+            indexes = []
+            for i in range(0,len(str_src)):
+                if str_src[i] != "0":
+                    indexes.append(controller.get_index([str_src[i],str_dst[i]],args.width))
+                else:
+                    indexes.append("0")
 
             for i in range(0,len(str_dst)):
-                print("Key " + str(i) + ": " + str(str_src[i]) + "," + str(str_dst[i]))
+                print("Key " + str(i) + ": " + str(str_src[i]) + "," + str(str_dst[i]) + " ::: " + str(indexes[i]))
 
             print(".")
             print(".^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.")
