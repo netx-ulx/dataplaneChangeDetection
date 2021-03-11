@@ -22,5 +22,5 @@ register<bit<1>>(SKETCH_WIDTH*SKETCH_DEPTH) control_flag;           // 1 bit con
 //*-----------------------Application Registers----------------------*//
 //*------------------------------------------------------------------*//
 
-register<bit<48>>(1) epoch;                         //timestamps require bit<48>
+register<bit<32>>(1) epoch;                         // epoch is number of packets
 register<bit<32>>(SKETCH_DEPTH) extra_op_counter;   // counter for extra operation

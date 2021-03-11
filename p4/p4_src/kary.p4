@@ -190,9 +190,7 @@ control MyIngress(inout headers hdr,
 
 
     apply {
-	if (hdr.ipv4.isValid()) {
-	    //first pass
-	    if (meta.repass == 0) {
+		if (hdr.ipv4.isValid()) {
 			forward.apply();
 			//construct flowkey information
 
@@ -211,13 +209,13 @@ control MyIngress(inout headers hdr,
 			/********************************************************/
 			/***************** EPOCH VERIFICATION *******************/
 
-			//check if new packet is inside current epoch or in the next one
 			epoch.read(meta.epoch,0);
-			if (standard_metadata.ingress_global_timestamp > meta.epoch) { //start new epoch
-				meta.new_epoch = standard_metadata.ingress_global_timestamp + EPOCH_SIZE; //new epoch = first packet + EPOCH_SIZE
-				epoch.write(0,meta.new_epoch);
 
-				//reset counters
+			//check if new packet is inside current epoch or in the next one
+			if (meta.epoch >= EPOCH_SIZE) { 
+				epoch.write(0,1); //reset packet counter
+
+				// start new epoch by changing sketch flag and resetting other counters
 				sketch_flag.read(meta.flag,0);
 				if (meta.flag == 0) {
 					sketch_flag.write(0,1);
@@ -230,6 +228,10 @@ control MyIngress(inout headers hdr,
 					extra_op_counter.write(1,SKETCH_WIDTH-1);
 					extra_op_counter.write(2,SKETCH_WIDTH-1);
 				}
+			} else {
+				// increment number of packets in this epoch
+				meta.epoch = meta.epoch + 1;
+				epoch.write(0,meta.epoch);
 			}
 
 			/********************************************************/
@@ -273,8 +275,11 @@ control MyIngress(inout headers hdr,
 				meta.tempcount = meta.tempcount + 1;
 				sketch_count.write(meta.hash0, meta.tempcount);
 			}
+		} else {
+			epoch.read(meta.epoch,0);
+			meta.epoch = meta.epoch + 1;
+			epoch.write(0,meta.epoch); //reset packet counter
 		}
-	}
     }
 }
 

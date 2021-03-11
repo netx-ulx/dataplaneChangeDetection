@@ -63,8 +63,9 @@ struct metadata {
 	bit<32> offset;
 	int<32> obs;
 	int<32> err;
-	bit<48> epoch; //timestamps require bit<48>
-	bit<48> new_epoch; //timestamps require bit<48>
+	//bit<48> epoch; //timestamps require bit<48>
+	//bit<48> new_epoch; //timestamps require bit<48>
+	bit<32> epoch; // epoch in # of packets
 	int<32> forecast;
 	int<32> aux_forecast;
 	int<32> new_forecast;

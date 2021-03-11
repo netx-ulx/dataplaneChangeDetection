@@ -23,6 +23,7 @@ class CMSController(object):
 
         self.init()
         self.registers = []
+        self.flag = None
 
     def init(self):
         if self.set_hash:
@@ -46,6 +47,9 @@ class CMSController(object):
            This solution includes a very basic statistic, with the number of flows inside the confidence bound.
         """
         self.read_registers()
+        if self.registers[0] == None:
+            return
+
         aux = []
         for value in self.registers[3]: #check values inside error_sketch
             if value > 4000000000:
@@ -57,12 +61,16 @@ class CMSController(object):
     def read_registers(self):
         self.registers = []
         self.registers.append(self.controller.register_read("sketch_flag"))         #0 flag
-        self.registers.append(self.controller.register_read("srcAddr"))             #1 src ips
-        self.registers.append(self.controller.register_read("dstAddr"))             #2 dst ips
-        if (self.registers[0][0] == 0): #choose error sketch
-            self.registers.append(self.controller.register_read("error_sketch_f1")) #3 error sketch
+        if self.registers[0] != self.flag:
+            self.flag = self.registers[0]
+            self.registers.append(self.controller.register_read("srcAddr"))             #1 src ips
+            self.registers.append(self.controller.register_read("dstAddr"))             #2 dst ips
+            if (self.registers[0][0] == 0): #choose error sketch
+                self.registers.append(self.controller.register_read("error_sketch_f1")) #3 error sketch
+            else:
+                self.registers.append(self.controller.register_read("error_sketch_f0")) #3 error sketch
         else:
-            self.registers.append(self.controller.register_read("error_sketch_f0")) #3 error sketch
+            self.registers[0] = None
 
     def flow_to_bytestream(self, flow):
         return socket.inet_aton(flow[0]) + socket.inet_aton(flow[1])
@@ -88,7 +96,7 @@ if __name__ == "__main__":
     parser.add_argument('--port', help="thrift server port" , type=int, required=False, default="9090")
     parser.add_argument('--width', help="width of the sketch (number of buckets per row)", type=int, required=False, default=32)
     parser.add_argument('--depth', help="depth of the sketch (number of rows)", type=int, required=False, default=3)
-    parser.add_argument('--epoch', help="seconds in each epoch", type=int, required=False, default=20)
+    parser.add_argument('--epoch', help="seconds in each epoch", type=int, required=False, default=1)
     parser.add_argument('--option', help="controller option can be either set_hashes, decode or reset registers", type=str, required=False, default="set_hashes")
     args = parser.parse_args()
 
@@ -98,6 +106,9 @@ if __name__ == "__main__":
     if args.option == "detect":
         while(True):    
             controller.decode_registers()
+            if controller.registers[0] == None:
+                time.sleep(args.epoch)
+                continue
             error, raw_src, raw_dst = controller.detect_change(args.depth)
             error_sketch = KAry_Sketch(len(error),len(error[0]))
             error_sketch.sketch = error
