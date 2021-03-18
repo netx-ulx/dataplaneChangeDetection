@@ -1,5 +1,5 @@
 from kary_sketch import *
-from p4utils.utils.topology import Topology
+#from p4utils.utils.topology import Topology
 from p4utils.utils.sswitch_API import *
 from crc import Crc
 import socket, struct, pickle, os

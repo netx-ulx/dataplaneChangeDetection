@@ -2,10 +2,10 @@
 //*-----------------------------MV Sketch----------------------------*//
 //*------------------------------------------------------------------*//
 
-register<bit<32>>(SKETCH_WIDTH) srcAddr;        //key field: src
-register<bit<32>>(SKETCH_WIDTH) dstAddr;        //key_field: dst
+register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) srcAddr;        //key field: src
+register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) dstAddr;        //key_field: dst
 
-register<int<32>>(SKETCH_WIDTH) sketch_count;   //count field for the mjrty
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) sketch_count;   //count field for the mjrty
 
 //*------------------------------------------------------------------*//
 //*---------------------------K-Ary Sketch---------------------------*//

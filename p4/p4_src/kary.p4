@@ -25,7 +25,7 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 ***************** MAIN UPDATE FUNCTION ********************
 **********************************************************/
 
-void UpdateRow(int num, inout metadata meta) {
+void KARY_UpdateRow(int num, inout metadata meta) {
 	//SKETCH + FORECASTING MODULE
 	sketch_flag.read(meta.flag,0);
 	if (meta.flag == 1) { //Select the current forecast sketch
@@ -133,7 +133,32 @@ void UpdateRow(int num, inout metadata meta) {
 			}
 		}
 	}
-} 
+}
+
+/********************************************************/
+/*********** MAJORITY VOTE ALGORITHM (MJRTY) ************/
+/********************************************************/
+void MV_UpdateRow(inout metadata meta) {
+	//compare candidate flow key with current flow key
+	meta.flag = 0;
+	srcAddr.read(meta.tempsrc, meta.hash);
+	dstAddr.read(meta.tempdst, meta.hash);
+	sketch_count.read(meta.tempcount, meta.hash);
+	if (meta.tempsrc!= meta.flowkey[31:0] || meta.tempdst != meta.flowkey[63:32]) { //if keys are different check counter
+		if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
+			srcAddr.write(meta.hash, meta.flowkey[31:0]);
+			dstAddr.write(meta.hash, meta.flowkey[63:32]);
+			meta.tempcount = 1;
+			sketch_count.write(meta.hash, meta.tempcount);
+		} else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
+			meta.tempcount = meta.tempcount - 1;
+			sketch_count.write(meta.hash, meta.tempcount);
+		}		
+	} else { // if keys are equal increment counter by 1
+		meta.tempcount = meta.tempcount + 1;
+		sketch_count.write(meta.hash, meta.tempcount);
+	}
+}
 
 /*********************************************************
 ***************** INGRESS PROCESSING *******************
@@ -240,45 +265,24 @@ control MyIngress(inout headers hdr,
 			//compute offset for first row, update first row
 			meta.hash = meta.hash0;
 			meta.offset = 0;
-			UpdateRow(0,meta);
-
+			KARY_UpdateRow(0,meta);
+			MV_UpdateRow(meta);
+			
 			//compute offset for second row, update second row
 			meta.offset = SKETCH_WIDTH;
 			meta.hash = meta.hash1 + meta.offset;
-			UpdateRow(1,meta);
+			KARY_UpdateRow(1,meta);
+			MV_UpdateRow(meta);
 
 			//compute offset for third row, update third row
 			meta.offset = SKETCH_WIDTH + SKETCH_WIDTH;
 			meta.hash = meta.hash2 + meta.offset;
-			UpdateRow(2,meta);
-
-
-			/********************************************************/
-			/*********** MAJORITY VOTE ALGORITHM (MJRTY) ************/
-
-			//compare candidate flow key with current flow key
-			meta.flag = 0;
-			srcAddr.read(meta.tempsrc, meta.hash0);
-			dstAddr.read(meta.tempdst, meta.hash0);
-			sketch_count.read(meta.tempcount, meta.hash0);
-			if (meta.tempsrc!= meta.flowkey[31:0] || meta.tempdst != meta.flowkey[63:32]) { //if keys are different check counter
-				if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
-					srcAddr.write(meta.hash0, meta.flowkey[31:0]);
-					dstAddr.write(meta.hash0, meta.flowkey[63:32]);
-					meta.tempcount = 1;
-					sketch_count.write(meta.hash0, meta.tempcount);
-				} else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
-					meta.tempcount = meta.tempcount - 1;
-					sketch_count.write(meta.hash0, meta.tempcount);
-				}		
-			} else { // if keys are equal increment counter by 1
-				meta.tempcount = meta.tempcount + 1;
-				sketch_count.write(meta.hash0, meta.tempcount);
-			}
+			KARY_UpdateRow(2,meta);
+			MV_UpdateRow(meta);
 		} else {
-			epoch.read(meta.epoch,0);
-			meta.epoch = meta.epoch + 1;
-			epoch.write(0,meta.epoch); //reset packet counter
+			//epoch.read(meta.epoch,0);
+			//meta.epoch = meta.epoch + 1;
+			//epoch.write(0,meta.epoch); //reset packet counter
 		}
     }
 }
