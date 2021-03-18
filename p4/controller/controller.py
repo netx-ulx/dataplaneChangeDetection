@@ -60,15 +60,27 @@ class CMSController(object):
     
     def read_registers(self):
         self.registers = []
-        self.registers.append(self.controller.register_read("sketch_flag"))         #0 flag
+        self.registers.append(self.controller.register_read("sketch_flag"))             #0 flag
         if self.registers[0] != self.flag:
             self.flag = self.registers[0]
-            self.registers.append(self.controller.register_read("srcAddr"))             #1 src ips
-            self.registers.append(self.controller.register_read("dstAddr"))             #2 dst ips
-            if (self.registers[0][0] == 0): #choose error sketch
+            if (self.registers[0][0] == 0): #choose error and mv sketch
+                self.registers.append(self.controller.register_read("srcAddr_f1"))      #1 src ips
+                self.registers.append(self.controller.register_read("dstAddr_f1"))      #2 dst ips
                 self.registers.append(self.controller.register_read("error_sketch_f1")) #3 error sketch
+
+                #reset mv keys and counters
+                self.controller.register_reset("srcAddr_f1")
+                self.controller.register_reset("dstAddr_f1")
+                self.controller.register_reset("sketch_count_f1")
             else:
+                self.registers.append(self.controller.register_read("srcAddr_f0"))      #1 src ips
+                self.registers.append(self.controller.register_read("dstAddr_f0"))      #2 dst ips
                 self.registers.append(self.controller.register_read("error_sketch_f0")) #3 error sketch
+
+                #reset mv keys and counters
+                self.controller.register_reset("srcAddr_f0")
+                self.controller.register_reset("dstAddr_f0")
+                self.controller.register_reset("sketch_count_f0")     
         else:
             self.registers[0] = None
 

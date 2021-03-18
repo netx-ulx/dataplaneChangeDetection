@@ -2,10 +2,13 @@
 //*-----------------------------MV Sketch----------------------------*//
 //*------------------------------------------------------------------*//
 
-register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) srcAddr;        //key field: src
-register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) dstAddr;        //key_field: dst
+register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) srcAddr_f0;        //key field: src, when the sketch flag is 0
+register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) dstAddr_f0;        //key_field: dst, when the sketch flag is 0
+register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) srcAddr_f1;        //key field: src, when the sketch flag is 1
+register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) dstAddr_f1;        //key_field: dst, when the sketch flag is 1
 
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) sketch_count;   //count field for the mjrty
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) sketch_count_f0;   //count field for the mjrty, when the sketch flag is 0
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) sketch_count_f1;   //count field for the mjrty, when the sketch flag is 1
 
 //*------------------------------------------------------------------*//
 //*---------------------------K-Ary Sketch---------------------------*//

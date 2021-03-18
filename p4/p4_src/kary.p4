@@ -27,7 +27,6 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 
 void KARY_UpdateRow(int num, inout metadata meta) {
 	//SKETCH + FORECASTING MODULE
-	sketch_flag.read(meta.flag,0);
 	if (meta.flag == 1) { //Select the current forecast sketch
 		control_flag.read(meta.ctrl,meta.hash); 
 		if (meta.ctrl != meta.flag) { //If equals, copy forecast_sketch
@@ -140,23 +139,42 @@ void KARY_UpdateRow(int num, inout metadata meta) {
 /********************************************************/
 void MV_UpdateRow(inout metadata meta) {
 	//compare candidate flow key with current flow key
-	meta.flag = 0;
-	srcAddr.read(meta.tempsrc, meta.hash);
-	dstAddr.read(meta.tempdst, meta.hash);
-	sketch_count.read(meta.tempcount, meta.hash);
-	if (meta.tempsrc!= meta.flowkey[31:0] || meta.tempdst != meta.flowkey[63:32]) { //if keys are different check counter
-		if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
-			srcAddr.write(meta.hash, meta.flowkey[31:0]);
-			dstAddr.write(meta.hash, meta.flowkey[63:32]);
-			meta.tempcount = 1;
-			sketch_count.write(meta.hash, meta.tempcount);
-		} else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
-			meta.tempcount = meta.tempcount - 1;
-			sketch_count.write(meta.hash, meta.tempcount);
-		}		
-	} else { // if keys are equal increment counter by 1
-		meta.tempcount = meta.tempcount + 1;
-		sketch_count.write(meta.hash, meta.tempcount);
+	if (meta.flag == 0) {
+		srcAddr_f0.read(meta.tempsrc, meta.hash);
+		dstAddr_f0.read(meta.tempdst, meta.hash);
+		sketch_count_f0.read(meta.tempcount, meta.hash);
+		if (meta.tempsrc!= meta.flowkey[31:0] || meta.tempdst != meta.flowkey[63:32]) { //if keys are different check counter
+			if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
+				srcAddr_f0.write(meta.hash, meta.flowkey[31:0]);
+				dstAddr_f0.write(meta.hash, meta.flowkey[63:32]);
+				meta.tempcount = 1;
+				sketch_count_f0.write(meta.hash, meta.tempcount);
+			} else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
+				meta.tempcount = meta.tempcount - 1;
+				sketch_count_f0.write(meta.hash, meta.tempcount);
+			}		
+		} else { // if keys are equal increment counter by 1
+			meta.tempcount = meta.tempcount + 1;
+			sketch_count_f0.write(meta.hash, meta.tempcount);
+		}
+	} else {
+		srcAddr_f1.read(meta.tempsrc, meta.hash);
+		dstAddr_f1.read(meta.tempdst, meta.hash);
+		sketch_count_f1.read(meta.tempcount, meta.hash);
+		if (meta.tempsrc!= meta.flowkey[31:0] || meta.tempdst != meta.flowkey[63:32]) { //if keys are different check counter
+			if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
+				srcAddr_f1.write(meta.hash, meta.flowkey[31:0]);
+				dstAddr_f1.write(meta.hash, meta.flowkey[63:32]);
+				meta.tempcount = 1;
+				sketch_count_f1.write(meta.hash, meta.tempcount);
+			} else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
+				meta.tempcount = meta.tempcount - 1;
+				sketch_count_f1.write(meta.hash, meta.tempcount);
+			}		
+		} else { // if keys are equal increment counter by 1
+			meta.tempcount = meta.tempcount + 1;
+			sketch_count_f1.write(meta.hash, meta.tempcount);
+		}
 	}
 }
 
@@ -235,20 +253,21 @@ control MyIngress(inout headers hdr,
 			/***************** EPOCH VERIFICATION *******************/
 
 			epoch.read(meta.epoch,0);
-
+			sketch_flag.read(meta.flag,0);
 			//check if new packet is inside current epoch or in the next one
 			if (meta.epoch >= EPOCH_SIZE) { 
 				epoch.write(0,1); //reset packet counter
 
 				// start new epoch by changing sketch flag and resetting other counters
-				sketch_flag.read(meta.flag,0);
 				if (meta.flag == 0) {
-					sketch_flag.write(0,1);
+					meta.flag = 1;
+					sketch_flag.write(0,meta.flag);
 					extra_op_counter.write(0,0);
 					extra_op_counter.write(1,0);
 					extra_op_counter.write(2,0);
 				} else {
-					sketch_flag.write(0,0);
+					meta.flag = 0;
+					sketch_flag.write(0,meta.flag);
 					extra_op_counter.write(0,SKETCH_WIDTH-1);
 					extra_op_counter.write(1,SKETCH_WIDTH-1);
 					extra_op_counter.write(2,SKETCH_WIDTH-1);
