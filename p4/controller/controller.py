@@ -5,6 +5,7 @@ from crc import Crc
 import socket, struct, pickle, os
 import ipaddress 
 import time
+import itertools
 
 crc32_polinomials = [0x04C11DB7, 0xEDB88320, 0xDB710641, 0x82608EDB, 0x741B8CD7, 0xEB31D82E,
                     0xD663B05, 0xBA0DC66B, 0x32583499, 0x992C1A4C, 0x32583499, 0x992C1A4C]
@@ -155,16 +156,27 @@ if __name__ == "__main__":
             for i in range(0,len(str_dst)):
                 print("Key " + str(i) + ": " + str(str_src[i]) + "," + str(str_dst[i]) + " ::: " + str(indexes[i]))
 
+            k = []
+            for i in range(0,len(str_dst)):
+                k.append([str_src[i],str_dst[i],indexes[i]])
+
+            keys = []
+            for key in k:
+                if key in keys:
+                    pass
+                else:
+                    keys.append(key)
+
             T = 0.1
             #Compute threshold
             TA = T * sqrt(error_sketch.ESTIMATEF2())
 
             #Estimate error for each key
-            for i in range(0,len(indexes)):
-                if str_src[i] != "0":
-                    estimate = error_sketch.ESTIMATE(indexes[i])
+            for i in range(0,len(keys)):
+                if keys[i][0] != "0":
+                    estimate = error_sketch.ESTIMATE(keys[i][2])
                     if estimate > TA:
-                        print("Change detected for:", str_src[i] + "," + str_dst[i], "with estimate:", estimate)
+                        print("Change detected for:", keys[i][0] + "," + keys[i][1], "with estimate:", estimate)
 
 
             print(".")
