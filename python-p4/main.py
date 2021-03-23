@@ -5,7 +5,7 @@ import getopt, sys
 def main():
     kary_depth = 5 #number of rows
     kary_width = 5462 #number of buckets in each row
-    kary_epoch = 20 #seconds per epoch
+    kary_epoch = 1000 #packets per epoch
     alpha = 0.6 #alpha to be used by the EWMA and NSHW
     beta = 0.7 #beta to be used by the NSHW
     T = 0.5 #threshold used by the change detection module
@@ -42,7 +42,7 @@ def main():
             kary_depth = int(current_value)
         elif current_argument in ("-e", "--epoch"):
             print("Updating epoch to", current_value)
-            kary_epoch = float(current_value)
+            kary_epoch = int(current_value)
         elif current_argument in ("-f", "--fmodel"):
             if current_value in supported_models:
                 print("Updating forecasting model to", current_value)
@@ -98,10 +98,10 @@ def main():
     print("Finished parsing packets")
 
     complex_result, _ = main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets)
-    with open('output/' + '/' + path[7:-5] + "-" + str(kary_epoch) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
+    with open('output/' + path[10:-5] + "-" + str(kary_epoch) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
       sys.stdout = f
       for epoch in complex_result:
-        print("Epoch:", epoch["epoch"][1])
+        print("Epoch:", epoch["epoch"][1], epoch["epoch"][2])
         print(epoch["res"])
 
     sys.stdout = original_stdout
