@@ -133,7 +133,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
                 for key in keys:
                     estimate = error_sketch.ESTIMATE(key,hash_func)
                     if estimate > threshold:
-                        complex_res.append(key)
+                        complex_res.append([key,estimate])
                         res.append(key)
                         #print("Change detected for:", key, "with estimate:", estimate)
                 part_result["res"] = complex_res
