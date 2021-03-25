@@ -4,6 +4,8 @@ from scapy.all import *
 from scapy.utils import rdpcap
 import sys
 
+import time
+
 if len(sys.argv) < 2:
     print("Usage: ./send.py [Trace path]")
 else:
@@ -12,5 +14,6 @@ else:
     for pkt in pkts:
         #input("Enter")
         sendp(pkt, iface="veth2")
+        time.sleep(0.1)
         count+=1
         print(count)

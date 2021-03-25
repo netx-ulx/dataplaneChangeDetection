@@ -59,6 +59,7 @@ struct metadata {
     bit<1> flag;
 
 	bit<1> ctrl;
+    bit<1> first;
 	bit<32> counter;
 	bit<32> offset;
 	int<32> obs;

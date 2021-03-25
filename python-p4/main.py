@@ -101,7 +101,7 @@ def main():
     with open('output/' + path[10:-5] + "-" + str(kary_epoch) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
       sys.stdout = f
       for epoch in complex_result:
-        print("Epoch:", epoch["epoch"][1], epoch["epoch"][2])
+        print("Epoch:", epoch["epoch"][1], "      " + "Threshold: " + str(epoch["epoch"][0]))
         print(epoch["res"])
 
     sys.stdout = original_stdout

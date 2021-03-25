@@ -197,9 +197,9 @@ control MyIngress(inout headers hdr,
     //action: calculate hash functions
     //store hash index of each packet in metadata
     action cal_hash() {
-	hash(meta.hash0, HashAlgorithm.crc32_custom, 32w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for first row
-	hash(meta.hash1, HashAlgorithm.crc32_custom, 32w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for second row
-	hash(meta.hash2, HashAlgorithm.crc32_custom, 32w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for third row
+	hash(meta.hash0, HashAlgorithm.crc32_custom, 64w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for first row
+	hash(meta.hash1, HashAlgorithm.crc32_custom, 64w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for second row
+	hash(meta.hash2, HashAlgorithm.crc32_custom, 64w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for third row
     }
 
 
@@ -254,10 +254,11 @@ control MyIngress(inout headers hdr,
 
 			epoch.read(meta.epoch,0);
 			sketch_flag.read(meta.flag,0);
+			first.read(meta.first,0);
 			//check if new packet is inside current epoch or in the next one
 			if (meta.epoch >= EPOCH_SIZE) { 
 				epoch.write(0,1); //reset packet counter
-
+				first.write(0,1);
 				// start new epoch by changing sketch flag and resetting other counters
 				if (meta.flag == 0) {
 					meta.flag = 1;
@@ -285,18 +286,27 @@ control MyIngress(inout headers hdr,
 			meta.hash = meta.hash0;
 			meta.offset = 0;
 			KARY_UpdateRow(0,meta);
+			if(meta.first == 0) {
+				KARY_UpdateRow(0,meta);
+			}
 			MV_UpdateRow(meta);
 			
 			//compute offset for second row, update second row
 			meta.offset = SKETCH_WIDTH;
 			meta.hash = meta.hash1 + meta.offset;
 			KARY_UpdateRow(1,meta);
+			if(meta.first == 0) {
+				KARY_UpdateRow(1,meta);
+			}
 			MV_UpdateRow(meta);
 
 			//compute offset for third row, update third row
 			meta.offset = SKETCH_WIDTH + SKETCH_WIDTH;
 			meta.hash = meta.hash2 + meta.offset;
 			KARY_UpdateRow(2,meta);
+			if(meta.first == 0) {
+				KARY_UpdateRow(2,meta);
+			}
 			MV_UpdateRow(meta);
 		} else {
 			//epoch.read(meta.epoch,0);

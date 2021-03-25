@@ -107,7 +107,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--sw', help="switch name to configure" , type=str, required=False, default="s1")
     parser.add_argument('--port', help="thrift server port" , type=int, required=False, default="9090")
-    parser.add_argument('--width', help="width of the sketch (number of buckets per row)", type=int, required=False, default=32)
+    parser.add_argument('--width', help="width of the sketch (number of buckets per row)", type=int, required=False, default=64)
+    parser.add_argument('--thresh', help="threshold for the change detection module", type=float, required=False, default=0.1)
     parser.add_argument('--depth', help="depth of the sketch (number of rows)", type=int, required=False, default=3)
     parser.add_argument('--epoch', help="seconds in each epoch", type=int, required=False, default=1)
     parser.add_argument('--option', help="controller option can be either set_hashes, decode or reset registers", type=str, required=False, default="set_hashes")
@@ -117,6 +118,7 @@ if __name__ == "__main__":
     controller = CMSController(args.port,True) #True if we want to use custom polynomials
 
     if args.option == "detect":
+        epoch = -1
         while(True):    
             controller.decode_registers()
             if controller.registers[0] == None:
@@ -125,10 +127,18 @@ if __name__ == "__main__":
             error, raw_src, raw_dst = controller.detect_change(args.depth)
             error_sketch = KAry_Sketch(len(error),len(error[0]))
             error_sketch.sketch = error
-            print(". Sketch Flag: " + str(controller.registers[0][0]))
-            print(". Error Sketch:")
-            error_sketch.SHOW()
-            print(".")
+            #print(". Sketch Flag: " + str(controller.registers[0][0]))
+            #print(". Error Sketch:")
+            #print(".")
+
+            if epoch <= 0:
+                epoch = epoch + 1
+                continue
+
+            #error_sketch.SHOW()
+
+            #print("Epoch: " + str(epoch))
+            #epoch = epoch + 1
 
             str_src = []
             for src in raw_src:
@@ -153,11 +163,11 @@ if __name__ == "__main__":
                 else:
                     indexes.append("0")
 
-            for i in range(0,len(str_dst)):
-                print("Key " + str(i) + ": " + str(str_src[i]) + "," + str(str_dst[i]) + " ::: " + str(indexes[i]))
+            #for i in range(0,len(str_dst)):
+                #print("Key " + str(i) + ": " + str(str_src[i]) + "," + str(str_dst[i]) + " ::: " + str(indexes[i]))
 
             k = []
-            for i in range(0,len(str_dst)):
+            for i in range(0,len(str_dst)): 
                 k.append([str_src[i],str_dst[i],indexes[i]])
 
             keys = []
@@ -167,20 +177,32 @@ if __name__ == "__main__":
                 else:
                     keys.append(key)
 
-            T = 0.1
-            #Compute threshold
-            TA = T * sqrt(error_sketch.ESTIMATEF2())
+            for row in range(0,len(error_sketch.sketch)):
+                for value in range(0,len(error_sketch.sketch[row])):
+                    error_sketch.sketch[row][value] = error_sketch.sketch[row][value] / 10
 
+            #Compute threshold
+            TA = args.thresh * sqrt(error_sketch.ESTIMATEF2())
+
+            changes = []
+            #all_keys = []
             #Estimate error for each key
             for i in range(0,len(keys)):
                 if keys[i][0] != "0":
                     estimate = error_sketch.ESTIMATE(keys[i][2])
+                    #all_keys.append([(keys[i][0],keys[i][1],estimate)])
                     if estimate > TA:
-                        print("Change detected for:", keys[i][0] + "," + keys[i][1], "with estimate:", estimate)
+                        changes.append((keys[i][0],keys[i][1],estimate))
+                        #print("Change detected for:", keys[i][0] + "," + keys[i][1], "with estimate:", estimate)
+            
+            print("Epoch: " + str(epoch) + "       " + "Threshold: " + str(TA))
+            epoch = epoch + 1
+            print("change: " + str(changes))
+            #for key in all_keys:
+                #print(key)
 
-
-            print(".")
-            print(".^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.")
-            print(".")
+            #print(".")
+            #print(".^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.")
+            #print(".")
 
             time.sleep(args.epoch)
