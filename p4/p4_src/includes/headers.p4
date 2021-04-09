@@ -49,8 +49,6 @@ struct metadata {
 	bit<32> hash0;
 	bit<32> hash1;
 	bit<32> hash2;
-    bit<64> key;
-    bit<64> flowkey;
     bit<32> tempsrc;
     bit<32> tempdst;
     int<32> tempcount;
@@ -64,13 +62,16 @@ struct metadata {
 	bit<32> offset;
 	int<32> obs;
 	int<32> err;
-	//bit<48> epoch; //timestamps require bit<48>
-	//bit<48> new_epoch; //timestamps require bit<48>
+    int<32> num_packets;
 	bit<32> epoch; // epoch in # of packets
 	int<32> forecast;
 	int<32> aux_forecast;
 	int<32> new_forecast;
 	int<32> new_err;
+    int<32> new_err_op;
+
+    bit<1> mv;
+
 }
 
 struct headers {

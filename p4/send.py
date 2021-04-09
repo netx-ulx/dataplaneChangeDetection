@@ -14,6 +14,6 @@ else:
     for pkt in pkts:
         #input("Enter")
         sendp(pkt, iface="veth2")
-        time.sleep(0.1)
+        #time.sleep(0.05)
         count+=1
         print(count)

@@ -45,7 +45,6 @@ void KARY_UpdateRow(int num, inout metadata meta) {
 			meta.new_forecast = meta.obs + meta.aux_forecast;
 
 			forecast_sketch_f0.write(meta.hash,meta.new_forecast);
-
 		} else { //else, only update with observed
 			//update error
 			error_sketch_f1.read(meta.err,meta.hash);
@@ -68,8 +67,8 @@ void KARY_UpdateRow(int num, inout metadata meta) {
 					forecast_sketch_f1.read(meta.forecast,meta.counter+meta.offset);
 
 					//update error
-					meta.new_err = -meta.forecast; //negative
-					error_sketch_f1.write(meta.counter+meta.offset,meta.new_err);
+					meta.new_err_op = -meta.forecast; //negative
+					error_sketch_f1.write(meta.counter+meta.offset,meta.new_err_op);
 
 					//update forecast
 					meta.new_forecast = meta.forecast >> 1; //division by 2
@@ -119,8 +118,8 @@ void KARY_UpdateRow(int num, inout metadata meta) {
 					forecast_sketch_f0.read(meta.forecast,meta.counter+meta.offset);
 
 					//update error
-					meta.new_err = -meta.forecast; //negative
-					error_sketch_f0.write(meta.counter+meta.offset,meta.new_err);
+					meta.new_err_op = -meta.forecast; //negative
+					error_sketch_f0.write(meta.counter+meta.offset,meta.new_err_op);
 
 					//update forecast
 					meta.new_forecast = meta.forecast >> 1; //division by 2
@@ -132,21 +131,26 @@ void KARY_UpdateRow(int num, inout metadata meta) {
 			}
 		}
 	}
+	if (meta.new_err > 0) {
+		mv.write(num,1);
+	} else {
+		mv.write(num,0);
+	}
 }
 
 /********************************************************/
 /*********** MAJORITY VOTE ALGORITHM (MJRTY) ************/
 /********************************************************/
-void MV_UpdateRow(inout metadata meta) {
+void MV_UpdateRow(inout metadata meta, inout headers hdr) {
 	//compare candidate flow key with current flow key
 	if (meta.flag == 0) {
 		srcAddr_f0.read(meta.tempsrc, meta.hash);
 		dstAddr_f0.read(meta.tempdst, meta.hash);
 		sketch_count_f0.read(meta.tempcount, meta.hash);
-		if (meta.tempsrc!= meta.flowkey[31:0] || meta.tempdst != meta.flowkey[63:32]) { //if keys are different check counter
+		if (meta.tempsrc!= hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
 			if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
-				srcAddr_f0.write(meta.hash, meta.flowkey[31:0]);
-				dstAddr_f0.write(meta.hash, meta.flowkey[63:32]);
+				srcAddr_f0.write(meta.hash, hdr.ipv4.srcAddr);
+				dstAddr_f0.write(meta.hash, hdr.ipv4.dstAddr);
 				meta.tempcount = 1;
 				sketch_count_f0.write(meta.hash, meta.tempcount);
 			} else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
@@ -161,10 +165,10 @@ void MV_UpdateRow(inout metadata meta) {
 		srcAddr_f1.read(meta.tempsrc, meta.hash);
 		dstAddr_f1.read(meta.tempdst, meta.hash);
 		sketch_count_f1.read(meta.tempcount, meta.hash);
-		if (meta.tempsrc!= meta.flowkey[31:0] || meta.tempdst != meta.flowkey[63:32]) { //if keys are different check counter
+		if (meta.tempsrc != hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
 			if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
-				srcAddr_f1.write(meta.hash, meta.flowkey[31:0]);
-				dstAddr_f1.write(meta.hash, meta.flowkey[63:32]);
+				srcAddr_f1.write(meta.hash, hdr.ipv4.srcAddr);
+				dstAddr_f1.write(meta.hash, hdr.ipv4.dstAddr);
 				meta.tempcount = 1;
 				sketch_count_f1.write(meta.hash, meta.tempcount);
 			} else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
@@ -202,23 +206,6 @@ control MyIngress(inout headers hdr,
 	hash(meta.hash2, HashAlgorithm.crc32_custom, 64w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for third row
     }
 
-
-    action copy_key_tcp() {
-	meta.flowkey[31:0] = hdr.ipv4.srcAddr;
-	meta.flowkey[63:32] = hdr.ipv4.dstAddr;
-	//meta.flowkey2[15:0] = hdr.tcp.srcPort;
-	//meta.flowkey2[31:16] = hdr.tcp.dstPort;
-	//meta.flowkey2[39:32] = hdr.ipv4.protocol;
-    }
-
-    action copy_key_udp() {
-	meta.flowkey[31:0] = hdr.ipv4.srcAddr;
-	meta.flowkey[63:32] = hdr.ipv4.dstAddr;
-	//meta.flowkey2[15:0] = hdr.udp.srcPort;
-	//meta.flowkey2[31:16] = hdr.udp.dstPort;
-	//meta.flowkey2[39:32] = hdr.ipv4.protocol;
-    }
-
     table forward {
 	key = {
 	    standard_metadata.ingress_port: exact;
@@ -233,18 +220,12 @@ control MyIngress(inout headers hdr,
 
 
     apply {
+		total_num_packets.read(meta.num_packets,0);
+		meta.num_packets = meta.num_packets + 1;
+		total_num_packets.write(0,meta.num_packets);
+
 		if (hdr.ipv4.isValid()) {
 			forward.apply();
-			//construct flowkey information
-
-			// TODO - this can be generalized in the parser stage through the use of some metadata, I will explain you this trick soon
-			// so we can avoid the conditional checks and only call one action here
-			if (hdr.ipv4.protocol == IP_PROTOCOLS_TCP) {
-				copy_key_tcp();
-			}
-			if (hdr.ipv4.protocol == IP_PROTOCOLS_UDP) {
-				copy_key_udp();
-			}
 
 			//calculate hash value
 			cal_hash();
@@ -273,6 +254,7 @@ control MyIngress(inout headers hdr,
 					extra_op_counter.write(1,SKETCH_WIDTH-1);
 					extra_op_counter.write(2,SKETCH_WIDTH-1);
 				}
+				packet_changed.write(0,meta.num_packets);
 			} else {
 				// increment number of packets in this epoch
 				meta.epoch = meta.epoch + 1;
@@ -284,13 +266,13 @@ control MyIngress(inout headers hdr,
 
 			//compute offset for first row, update first row
 			meta.hash = meta.hash0;
-			meta.offset = 0;
 			KARY_UpdateRow(0,meta);
 			if(meta.first == 0) {
 				KARY_UpdateRow(0,meta);
 			}
-			MV_UpdateRow(meta);
-			
+
+			MV_UpdateRow(meta,hdr);
+
 			//compute offset for second row, update second row
 			meta.offset = SKETCH_WIDTH;
 			meta.hash = meta.hash1 + meta.offset;
@@ -298,16 +280,20 @@ control MyIngress(inout headers hdr,
 			if(meta.first == 0) {
 				KARY_UpdateRow(1,meta);
 			}
-			MV_UpdateRow(meta);
+
+			MV_UpdateRow(meta,hdr);
 
 			//compute offset for third row, update third row
 			meta.offset = SKETCH_WIDTH + SKETCH_WIDTH;
 			meta.hash = meta.hash2 + meta.offset;
+
 			KARY_UpdateRow(2,meta);
 			if(meta.first == 0) {
 				KARY_UpdateRow(2,meta);
 			}
-			MV_UpdateRow(meta);
+
+			MV_UpdateRow(meta,hdr);
+
 		} else {
 			//epoch.read(meta.epoch,0);
 			//meta.epoch = meta.epoch + 1;

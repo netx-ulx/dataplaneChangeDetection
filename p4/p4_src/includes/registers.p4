@@ -28,3 +28,6 @@ register<bit<1>>(SKETCH_WIDTH*SKETCH_DEPTH) control_flag;           // 1 bit con
 register<bit<1>>(1) first;                          // 1 bit flag for forecast sketch selection
 register<bit<32>>(1) epoch;                         // epoch is number of packets
 register<bit<32>>(SKETCH_DEPTH) extra_op_counter;   // counter for extra operation
+register<int<32>>(1) total_num_packets;             // total_num_packets
+register<int<32>>(1) packet_changed;                // total_num_packets
+register<bit<1>>(3) mv;                             // mv flag: only update mv sketch if the error for that bucket is positive (currently testing)                          

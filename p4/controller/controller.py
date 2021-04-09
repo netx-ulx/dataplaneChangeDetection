@@ -68,6 +68,7 @@ class CMSController(object):
                 self.registers.append(self.controller.register_read("srcAddr_f1"))      #1 src ips
                 self.registers.append(self.controller.register_read("dstAddr_f1"))      #2 dst ips
                 self.registers.append(self.controller.register_read("error_sketch_f1")) #3 error sketch
+                self.registers.append(self.controller.register_read("packet_changed"))  #4 total num packets
 
                 #reset mv keys and counters
                 self.controller.register_reset("srcAddr_f1")
@@ -77,11 +78,12 @@ class CMSController(object):
                 self.registers.append(self.controller.register_read("srcAddr_f0"))      #1 src ips
                 self.registers.append(self.controller.register_read("dstAddr_f0"))      #2 dst ips
                 self.registers.append(self.controller.register_read("error_sketch_f0")) #3 error sketch
+                self.registers.append(self.controller.register_read("packet_changed"))  #4 total num packets
 
                 #reset mv keys and counters
                 self.controller.register_reset("srcAddr_f0")
                 self.controller.register_reset("dstAddr_f0")
-                self.controller.register_reset("sketch_count_f0")     
+                self.controller.register_reset("sketch_count_f0")   
         else:
             self.registers[0] = None
 
@@ -100,7 +102,7 @@ class CMSController(object):
         width = len(self.registers[3])/depth
         for i in range(0,depth):
             splited.append(self.registers[3][i*width:((i+1)*width)])
-        return splited, self.registers[1], self.registers[2]
+        return splited, self.registers[1], self.registers[2], self.registers[4]
 
 if __name__ == "__main__":
     import argparse
@@ -124,21 +126,13 @@ if __name__ == "__main__":
             if controller.registers[0] == None:
                 time.sleep(args.epoch)
                 continue
-            error, raw_src, raw_dst = controller.detect_change(args.depth)
+            error, raw_src, raw_dst, num_packets = controller.detect_change(args.depth)
             error_sketch = KAry_Sketch(len(error),len(error[0]))
             error_sketch.sketch = error
-            #print(". Sketch Flag: " + str(controller.registers[0][0]))
-            #print(". Error Sketch:")
-            #print(".")
 
             if epoch <= 0:
                 epoch = epoch + 1
                 continue
-
-            #error_sketch.SHOW()
-
-            #print("Epoch: " + str(epoch))
-            #epoch = epoch + 1
 
             str_src = []
             for src in raw_src:
@@ -163,9 +157,6 @@ if __name__ == "__main__":
                 else:
                     indexes.append("0")
 
-            #for i in range(0,len(str_dst)):
-                #print("Key " + str(i) + ": " + str(str_src[i]) + "," + str(str_dst[i]) + " ::: " + str(indexes[i]))
-
             k = []
             for i in range(0,len(str_dst)): 
                 k.append([str_src[i],str_dst[i],indexes[i]])
@@ -185,24 +176,19 @@ if __name__ == "__main__":
             TA = args.thresh * sqrt(error_sketch.ESTIMATEF2())
 
             changes = []
-            #all_keys = []
+            all_keys = []
             #Estimate error for each key
             for i in range(0,len(keys)):
                 if keys[i][0] != "0":
                     estimate = error_sketch.ESTIMATE(keys[i][2])
-                    #all_keys.append([(keys[i][0],keys[i][1],estimate)])
+                    all_keys.append([(keys[i][0],keys[i][1],estimate,keys[i][2])])
                     if estimate > TA:
-                        changes.append((keys[i][0],keys[i][1],estimate))
+                        changes.append((keys[i][0],keys[i][1],estimate,keys[i][2]))
                         #print("Change detected for:", keys[i][0] + "," + keys[i][1], "with estimate:", estimate)
             
-            print("Epoch: " + str(epoch) + "       " + "Threshold: " + str(TA))
+            print("Epoch: " + str(epoch) + "       " + "Threshold: " + str(TA) + "       " + "Num Packets: " + str(num_packets[0]))
+            print("Change: " + str(changes))
+            print("Number of Flows: " + str(len(all_keys)))
+
             epoch = epoch + 1
-            print("change: " + str(changes))
-            #for key in all_keys:
-                #print(key)
-
-            #print(".")
-            #print(".^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.")
-            #print(".")
-
             time.sleep(args.epoch)
