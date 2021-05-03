@@ -27,7 +27,7 @@ def cycle(arguments):
             for change in epoch["res"]:
                 for target in targets:
                     if target[0] in change:
-                        if float(epoch["epoch"][1]) <= float(target[1]) + kary_epoch and float(epoch["epoch"][1]) >= float(target[1]) - kary_epoch: #If known attack is present in the changes for its epoch
+                        if float(epoch["epoch"][2]) <= float(target[1]) + kary_epoch and float(epoch["epoch"][2]) >= float(target[1]) - kary_epoch: #If known attack is present in the changes for its epoch
                             if target in targets:
                                 if target in cycle_targets:
                                     attacks_found = attacks_found + 1
@@ -42,10 +42,10 @@ def cycle(arguments):
         precision = attacks_found / (attacks_found + false_positives)
         recall = attacks_found / (attacks_found + (len(targets) - attacks_found))
         if arguments[10] == "nshw":
-            #print([false_positives/len(complex_result),mean(accuracies),precision,recall,false_positives,attacks_found,[alpha,beta,threshold,key_format]])
+            print([false_positives/len(complex_result),mean(accuracies),precision,recall,false_positives,attacks_found,[alpha,beta,threshold,key_format]])
             results.append([false_positives/len(complex_result),mean(accuracies),precision,recall,false_positives,attacks_found,[alpha,beta,threshold,key_format]])
         else:
-            #print([false_positives/len(complex_result),mean(accuracies),precision,recall,false_positives,attacks_found,[alpha,threshold,key_format]])
+            print([false_positives/len(complex_result),mean(accuracies),precision,recall,false_positives,attacks_found,[alpha,threshold,key_format]])
             results.append([false_positives/len(complex_result),mean(accuracies),precision,recall,false_positives,attacks_found,[alpha,threshold,key_format]])
     return results
 
@@ -141,7 +141,7 @@ def main():
     alphas = [0.3,0.4,0.5,0.6,0.7,0.8,0.9]
     betas = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]
     thresholds = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8]
-    keys = [["dst","proto"],["src","dst","proto"],["src","sport","dst","dport","proto"]]
+    keys = [["dst","proto"]]
 
     
     #------------------------------------ PREPARING ARGUMENTS FOR PARALLELIZATION ------------------------------------#

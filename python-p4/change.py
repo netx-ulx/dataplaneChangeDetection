@@ -103,7 +103,9 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
     control = 1
     complex_result = []
     result = []
+    num_packets = 0
     for pkt in packets:
+        num_packets = num_packets + 1
         #EXTRACT PACKET FIELDS
         packet = extract(key_format,pkt)
         if packet == None:
@@ -122,7 +124,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
                 #print("Threshold =", threshold, "Time:",cur_epoch)
 
                 part_result = {
-                    "epoch": [threshold,epoch,packet["time"]],
+                    "epoch": [threshold,epoch,packet["time"],num_packets,len(keys)],
                     "res": None,
                     "TN": 0,
                 }
@@ -132,8 +134,10 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
                 #error_sketch.SHOW()
                 for key in keys:
                     estimate = error_sketch.ESTIMATE(key,hash_func)
+                    #print(estimate)
+                        
                     if estimate > threshold:
-                        complex_res.append([key,estimate])
+                        complex_res.append(key + (str(estimate),))
                         res.append(key)
                         #print("Change detected for:", key, "with estimate:", estimate)
                 part_result["res"] = complex_res

@@ -98,13 +98,16 @@ def main():
     print("Finished parsing packets")
 
     complex_result, _ = main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets)
+    total_num_packets = 0
     with open('output/' + path[10:-5] + "-" + str(kary_epoch) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
       sys.stdout = f
       for epoch in complex_result:
-        print("Epoch:", epoch["epoch"][1], "      " + "Threshold: " + str(epoch["epoch"][0]))
+        print("Epoch:", epoch["epoch"][1], "      " + "Threshold: " + str(epoch["epoch"][0]), "      " + "Num Packets: " + str(epoch["epoch"][3]))
         print(epoch["res"])
+        total_num_packets = total_num_packets + int(epoch["epoch"][4])
+        print("Num Keys:",str(epoch["epoch"][4]))
 
     sys.stdout = original_stdout
-
+    print("Total Num Keys:",total_num_packets)
 if __name__ == "__main__":
   main()
