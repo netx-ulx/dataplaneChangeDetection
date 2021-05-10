@@ -185,10 +185,9 @@ if __name__ == "__main__":
                     if estimate > TA:
                         changes.append((keys[i][0],keys[i][1],estimate,keys[i][2]))
                         #print("Change detected for:", keys[i][0] + "," + keys[i][1], "with estimate:", estimate)
-            
-            print("Epoch: " + str(epoch) + "       " + "Threshold: " + str(TA) + "       " + "Num Packets: " + str(num_packets[0]))
-            print("Change: " + str(changes))
-            print("Number of Flows: " + str(len(all_keys)))
-
+	    with open("controller.out",'a') as f:
+	    	f.write("Epoch: " + str(epoch) + "       " + "Threshold: " + str(TA) + "       " + "Num Packets: " + str(num_packets[0]) +'\n')
+            	f.write("Change: " + str(changes) + '\n')
+            	f.write("Number of Flows: " + str(len(all_keys)) + '\n')
             epoch = epoch + 1
             time.sleep(args.epoch)
