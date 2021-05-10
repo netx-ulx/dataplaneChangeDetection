@@ -1,164 +1,164 @@
-Epoch: 1       Threshold: 42.475763397383176
+Epoch: 1       Threshold: 42.475763397383176       Num Packets: 2910
 []
-Epoch: 2       Threshold: 32.08916149908386
+Epoch: 2       Threshold: 32.08916149908386       Num Packets: 4297
 []
-Epoch: 3       Threshold: 33.9976656528249
+Epoch: 3       Threshold: 33.9976656528249       Num Packets: 5671
 []
-Epoch: 4       Threshold: 30.302312762067498
+Epoch: 4       Threshold: 30.302312762067498       Num Packets: 7052
 []
-Epoch: 5       Threshold: 31.17716909881128
+Epoch: 5       Threshold: 31.17716909881128       Num Packets: 8585
 [[('192.168.1.1', '239.255.255.250'), 47.36507936507937]]
-Epoch: 6       Threshold: 269.2390585240571
+Epoch: 6       Threshold: 269.2390585240571       Num Packets: 9620
 [[('216.58.200.97', '192.168.1.119'), 459.7142857142857]]
-Epoch: 7       Threshold: 70.73674787548548
+Epoch: 7       Threshold: 70.73674787548548       Num Packets: 10968
 []
-Epoch: 8       Threshold: 117.83313179833914
+Epoch: 8       Threshold: 117.83313179833914       Num Packets: 12345
 []
-Epoch: 9       Threshold: 97.48646136797458
+Epoch: 9       Threshold: 97.48646136797458       Num Packets: 13503
 [[('129.94.8.70', '192.168.1.205'), 117.77777777777777]]
-Epoch: 10       Threshold: 53.89320861052715
+Epoch: 10       Threshold: 53.89320861052715       Num Packets: 14827
 []
-Epoch: 11       Threshold: 69.8493130047479
+Epoch: 11       Threshold: 69.8493130047479       Num Packets: 16149
 []
-Epoch: 12       Threshold: 50.102518756815655
+Epoch: 12       Threshold: 50.102518756815655       Num Packets: 17695
 []
-Epoch: 13       Threshold: 35.13271942541594
+Epoch: 13       Threshold: 35.13271942541594       Num Packets: 19049
 []
-Epoch: 14       Threshold: 51.488145494790906
+Epoch: 14       Threshold: 51.488145494790906       Num Packets: 20431
 []
-Epoch: 15       Threshold: 34.31924811308943
+Epoch: 15       Threshold: 34.31924811308943       Num Packets: 21819
 []
-Epoch: 16       Threshold: 133.75587480132637
-[[('192.168.1.118', '192.168.1.175'), 178.7567894345238], [('192.168.1.175', '192.168.1.118'), 184.4187748015873]]
-Epoch: 17       Threshold: 135.75122519285551
+Epoch: 16       Threshold: 133.75587480132637       Num Packets: 23811
+[[('192.168.1.175', '192.168.1.118'), 184.4187748015873], [('192.168.1.118', '192.168.1.175'), 178.7567894345238]]
+Epoch: 17       Threshold: 135.75122519285551       Num Packets: 24937
 [[('192.168.1.175', '192.168.1.118'), 186.10267857142858], [('192.168.1.118', '192.168.1.175'), 172.13318452380952]]
-Epoch: 18       Threshold: 136.4660734008684
+Epoch: 18       Threshold: 136.4660734008684       Num Packets: 25975
 [[('192.168.1.175', '192.168.1.118'), 182.44816468253967], [('192.168.1.118', '192.168.1.175'), 176.47929067460316]]
-Epoch: 19       Threshold: 72.93306556108215
+Epoch: 19       Threshold: 72.93306556108215       Num Packets: 27133
 [[('192.168.1.175', '192.168.1.118'), 95.2875744047619], [('192.168.1.118', '192.168.1.175'), 93.31901041666667]]
-Epoch: 20       Threshold: 44.964009210533
+Epoch: 20       Threshold: 44.964009210533       Num Packets: 28285
 [[('192.168.1.175', '192.168.1.118'), 56.47855437748016], [('192.168.1.118', '192.168.1.175'), 59.426267593625994]]
-Epoch: 21       Threshold: 29.614554123457218
+Epoch: 21       Threshold: 29.614554123457218       Num Packets: 29291
 []
-Epoch: 22       Threshold: 35.324782285836804
+Epoch: 22       Threshold: 35.324782285836804       Num Packets: 30451
 [[('192.168.1.175', '192.168.1.118'), 36.9767814515129], [('192.168.1.118', '192.168.1.175'), 39.745455787295384]]
-Epoch: 23       Threshold: 101.7793958071926
+Epoch: 23       Threshold: 101.7793958071926       Num Packets: 31617
 []
-Epoch: 24       Threshold: 69.34073404995816
+Epoch: 24       Threshold: 69.34073404995816       Num Packets: 32649
 [[('129.94.8.70', '192.168.1.205'), 76.37593672010634]]
-Epoch: 25       Threshold: 187.2927952828433
+Epoch: 25       Threshold: 187.2927952828433       Num Packets: 33657
 [[('129.94.8.70', '192.168.1.205'), 249.48955566164048]]
-Epoch: 26       Threshold: 63.10282010697104
+Epoch: 26       Threshold: 63.10282010697104       Num Packets: 34825
 [[('129.94.8.70', '192.168.1.205'), 90.2050952911377]]
-Epoch: 27       Threshold: 115.9779744432471
+Epoch: 27       Threshold: 115.9779744432471       Num Packets: 35827
 [[('129.94.8.70', '192.168.1.205'), 179.19778574080695]]
-Epoch: 28       Threshold: 93.37992982009033
+Epoch: 28       Threshold: 93.37992982009033       Num Packets: 36966
 []
-Epoch: 29       Threshold: 21.242990245919458
+Epoch: 29       Threshold: 21.242990245919458       Num Packets: 37994
 []
-Epoch: 30       Threshold: 67.94963995615556
+Epoch: 30       Threshold: 67.94963995615556       Num Packets: 39004
 [[('129.94.8.70', '192.168.1.205'), 95.19197297474695]]
-Epoch: 31       Threshold: 104.78867996417053
+Epoch: 31       Threshold: 104.78867996417053       Num Packets: 40166
 [[('129.94.8.70', '192.168.1.205'), 118.70709759848458]]
-Epoch: 32       Threshold: 170.0018783208523
+Epoch: 32       Threshold: 170.0018783208523       Num Packets: 41170
 [[('129.94.8.70', '192.168.1.205'), 226.97259641828992]]
-Epoch: 33       Threshold: 23.78798938036726
+Epoch: 33       Threshold: 23.78798938036726       Num Packets: 42176
 [[('129.94.8.70', '192.168.1.205'), 43.39106011390686]]
-Epoch: 34       Threshold: 55.47603399167302
+Epoch: 34       Threshold: 55.47603399167302       Num Packets: 43182
 []
-Epoch: 35       Threshold: 276.59243256828876
+Epoch: 35       Threshold: 276.59243256828876       Num Packets: 44314
 []
-Epoch: 36       Threshold: 119.54246507104915
+Epoch: 36       Threshold: 119.54246507104915       Num Packets: 45335
 []
-Epoch: 37       Threshold: 67.8759458407397
+Epoch: 37       Threshold: 67.8759458407397       Num Packets: 46343
 [[('192.168.1.205', '129.94.8.70'), 105.99316446972449]]
-Epoch: 38       Threshold: 38.74588128105109
+Epoch: 38       Threshold: 38.74588128105109       Num Packets: 47495
 [[('192.168.1.205', '129.94.8.70'), 46.37923412606682]]
-Epoch: 39       Threshold: 64.6210434876189
+Epoch: 39       Threshold: 64.6210434876189       Num Packets: 48506
 []
-Epoch: 40       Threshold: 45.445624254154474
+Epoch: 40       Threshold: 45.445624254154474       Num Packets: 49667
 [[('192.168.1.1', '239.255.255.250'), 52.19545089613484]]
-Epoch: 41       Threshold: 25.130809510751302
+Epoch: 41       Threshold: 25.130809510751302       Num Packets: 50689
 []
-Epoch: 42       Threshold: 20.65186362911653
+Epoch: 42       Threshold: 20.65186362911653       Num Packets: 51714
 []
-Epoch: 43       Threshold: 23.371580415638913
+Epoch: 43       Threshold: 23.371580415638913       Num Packets: 52885
 [[('192.168.1.1', '239.255.255.250'), 43.44788462466362]]
-Epoch: 44       Threshold: 22.19633511092666
+Epoch: 44       Threshold: 22.19633511092666       Num Packets: 53905
 []
-Epoch: 45       Threshold: 33.56652617301163
+Epoch: 45       Threshold: 33.56652617301163       Num Packets: 55068
 [[('192.168.1.1', '239.255.255.250'), 36.48825069764707]]
-Epoch: 46       Threshold: 22.980414177803556
+Epoch: 46       Threshold: 22.980414177803556       Num Packets: 56092
 []
-Epoch: 47       Threshold: 26.202113457373063
+Epoch: 47       Threshold: 26.202113457373063       Num Packets: 57106
 []
-Epoch: 48       Threshold: 25.001489951561716
+Epoch: 48       Threshold: 25.001489951561716       Num Packets: 58273
 [[('192.168.1.1', '239.255.255.250'), 43.4680264096396]]
-Epoch: 49       Threshold: 25.000311264015487
+Epoch: 49       Threshold: 25.000311264015487       Num Packets: 59287
 []
-Epoch: 50       Threshold: 59.636326227974855
+Epoch: 50       Threshold: 59.636326227974855       Num Packets: 60295
 []
-Epoch: 51       Threshold: 34.12149467007403
+Epoch: 51       Threshold: 34.12149467007403       Num Packets: 61470
 [[('192.168.1.1', '239.255.255.250'), 44.29064615834781]]
-Epoch: 52       Threshold: 33.36683123772614
+Epoch: 52       Threshold: 33.36683123772614       Num Packets: 62484
 []
-Epoch: 53       Threshold: 23.043585687843787
+Epoch: 53       Threshold: 23.043585687843787       Num Packets: 63656
 [[('192.168.1.1', '239.255.255.250'), 40.02348461024006]]
-Epoch: 54       Threshold: 29.03536922272404
+Epoch: 54       Threshold: 29.03536922272404       Num Packets: 64676
 []
-Epoch: 55       Threshold: 19.215963526479996
+Epoch: 55       Threshold: 19.215963526479996       Num Packets: 65840
 [[('192.168.1.1', '239.255.255.250'), 33.878887025575885]]
-Epoch: 56       Threshold: 320.75037087339547
+Epoch: 56       Threshold: 320.75037087339547       Num Packets: 66845
 [[('216.58.200.97', '192.168.1.119'), 498.3795509135045]]
-Epoch: 57       Threshold: 118.32024891159054
+Epoch: 57       Threshold: 118.32024891159054       Num Packets: 67866
 []
-Epoch: 58       Threshold: 98.65507045022865
+Epoch: 58       Threshold: 98.65507045022865       Num Packets: 68886
 []
-Epoch: 59       Threshold: 59.41382718203281
+Epoch: 59       Threshold: 59.41382718203281       Num Packets: 70053
 []
-Epoch: 60       Threshold: 32.41373377401979
+Epoch: 60       Threshold: 32.41373377401979       Num Packets: 71067
 []
-Epoch: 61       Threshold: 26.090368335272192
+Epoch: 61       Threshold: 26.090368335272192       Num Packets: 72241
 [[('192.168.1.1', '239.255.255.250'), 37.78730020318663]]
-Epoch: 62       Threshold: 34.780314948786675
+Epoch: 62       Threshold: 34.780314948786675       Num Packets: 73251
 []
-Epoch: 63       Threshold: 59.20085905335414
+Epoch: 63       Threshold: 59.20085905335414       Num Packets: 74257
 []
-Epoch: 64       Threshold: 86.536830812472
+Epoch: 64       Threshold: 86.536830812472       Num Packets: 75593
 []
-Epoch: 65       Threshold: 121.64677124892027
+Epoch: 65       Threshold: 121.64677124892027       Num Packets: 76939
 []
-Epoch: 66       Threshold: 152.40663366452475
+Epoch: 66       Threshold: 152.40663366452475       Num Packets: 78078
 [[('129.94.8.70', '192.168.1.205'), 256.57671112776666]]
-Epoch: 67       Threshold: 68.11105583066026
+Epoch: 67       Threshold: 68.11105583066026       Num Packets: 79306
 []
-Epoch: 68       Threshold: 46.40612974696053
+Epoch: 68       Threshold: 46.40612974696053       Num Packets: 80565
 [[('129.94.8.70', '192.168.1.205'), 61.258776270612756]]
-Epoch: 69       Threshold: 131.83464641446062
+Epoch: 69       Threshold: 131.83464641446062       Num Packets: 81987
 []
-Epoch: 70       Threshold: 66.76747807480585
+Epoch: 70       Threshold: 66.76747807480585       Num Packets: 83310
 []
-Epoch: 71       Threshold: 37.74587542282737
+Epoch: 71       Threshold: 37.74587542282737       Num Packets: 84675
 []
-Epoch: 72       Threshold: 51.43444980185338
+Epoch: 72       Threshold: 51.43444980185338       Num Packets: 86163
 []
-Epoch: 73       Threshold: 76.03047811964433
+Epoch: 73       Threshold: 76.03047811964433       Num Packets: 87363
 [[('192.168.1.129', '192.168.1.165'), 86.48405431882811]]
-Epoch: 74       Threshold: 58.25368135926211
+Epoch: 74       Threshold: 58.25368135926211       Num Packets: 88887
 []
-Epoch: 75       Threshold: 174.28277760234113
+Epoch: 75       Threshold: 174.28277760234113       Num Packets: 89951
 [[('216.58.200.97', '192.168.1.119'), 288.42160855209073]]
-Epoch: 76       Threshold: 108.19031742340255
+Epoch: 76       Threshold: 108.19031742340255       Num Packets: 91262
 []
-Epoch: 77       Threshold: 122.31626949953967
+Epoch: 77       Threshold: 122.31626949953967       Num Packets: 92598
 [[('216.58.200.97', '192.168.1.119'), 208.82074197066552]]
-Epoch: 78       Threshold: 107.46059147240231
+Epoch: 78       Threshold: 107.46059147240231       Num Packets: 93944
 []
-Epoch: 79       Threshold: 39.76123834761449
+Epoch: 79       Threshold: 39.76123834761449       Num Packets: 95278
 [[('192.168.1.165', '192.168.1.129'), 42.104516099904465]]
-Epoch: 80       Threshold: 135.04665883455345
-[[('192.168.1.119', '216.58.200.97'), 135.40588748164834], [('216.58.200.97', '192.168.1.119'), 218.86449750823797]]
-Epoch: 81       Threshold: 119.82502339850794
+Epoch: 80       Threshold: 135.04665883455345       Num Packets: 96444
+[[('216.58.200.97', '192.168.1.119'), 218.86449750823797], [('192.168.1.119', '216.58.200.97'), 135.40588748164834]]
+Epoch: 81       Threshold: 119.82502339850794       Num Packets: 97844
 []
-Epoch: 82       Threshold: 77.36071996418673
+Epoch: 82       Threshold: 77.36071996418673       Num Packets: 99200
 [[('216.58.200.97', '192.168.1.119'), 113.63675929769441]]
