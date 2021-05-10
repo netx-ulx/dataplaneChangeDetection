@@ -1,0 +1,4 @@
+vm/.vagrant/
+*.pyc
+*.out
+*.pcap
