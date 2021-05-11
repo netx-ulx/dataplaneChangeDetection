@@ -69,18 +69,18 @@ def main():
     p4_thresholds, p4_changes, p4_flows = parse_p4(p4_file)
     python_thresholds, python_changes = parse_python(python_file)
 
-    threshold_discrepancies = []
-    threshold_discrep_ratio = []
-    estimate_discrepancies = []
-    estimate_discrep_ratio = []
+    threshold_errors = []
+    threshold_percent_errors = []
+    estimate_errors = []
+    estimate_percent_errors = []
 
     true_positives = 0
     false_positives = 0
     less_detections = 0
 
     for i in range(len(p4_thresholds)):
-        threshold_discrepancies.append(float(python_thresholds[i][3]) - float(p4_thresholds[i][3]))
-        threshold_discrep_ratio.append((float(p4_thresholds[i][3]) - float(python_thresholds[i][3])) / float(p4_thresholds[i][3]))
+        threshold_errors.append(float(python_thresholds[i][3]) - float(p4_thresholds[i][3]))
+        threshold_percent_errors.append((float(p4_thresholds[i][3]) - float(python_thresholds[i][3])) / float(p4_thresholds[i][3]))
 
     for i in range(len(p4_changes)):
         less_detections = less_detections + (len(python_changes[i]) - len(p4_changes[i]))
@@ -89,17 +89,18 @@ def main():
             found = False
             for j in range(len(python_changes[i])):
                 if change[0] == python_changes[i][j][0] and change[1] == python_changes[i][j][1]:
-                    discrepancy = float(python_changes[i][j][2]) - float(change[2])
-                    ratio = float(python_changes[i][j][2]) / float(change[2])
-                    estimate_discrepancies.append(discrepancy)
-                    estimate_discrep_ratio.append(ratio)
+                    error = float(python_changes[i][j][2]) - float(change[2])
+                    percent_error = (float(change[2]) - float(python_changes[i][j][2])) / float(change[2])
+                    estimate_errors.append(error)
+                    estimate_percent_errors.append(percent_error)
                     true_positives = true_positives + 1
                     found = True
                     break
             if found == False:
                 false_positives = false_positives + 1
     print("Total number of flows: ", sum(p4_flows))
-    print(mean(threshold_discrep_ratio))
+    print("Threshold Percent Error:", mean(threshold_percent_errors)*100, "%")
+    print("Estimate Percent Error:", mean(estimate_percent_errors)*100, "%")
     print("False Positives:",false_positives)
     print("False Negatives:",less_detections+false_positives)
     print("True Positives:", true_positives)
