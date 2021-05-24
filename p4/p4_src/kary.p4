@@ -28,11 +28,11 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 void KARY_UpdateRow(int num, inout metadata meta) {
 	//SKETCH + FORECASTING MODULE
 	if (meta.flag == 1) { //Select the current forecast sketch
-		control_flag.read(meta.ctrl,meta.hash); 
+		reg_control_sketch_flag.read(meta.ctrl,meta.hash); 
 		if (meta.ctrl != meta.flag) { //If equals, copy forecast_sketch
-			control_flag.write(meta.hash,1);
+			control_sketch_flag.write(meta.hash,1);
 			
-			forecast_sketch_f1.read(meta.forecast,meta.hash);
+			reg_forecast_sketch_f1.read(meta.forecast,meta.hash);
 			
 			//update error
 			meta.new_err = 10 - meta.forecast;
@@ -47,24 +47,24 @@ void KARY_UpdateRow(int num, inout metadata meta) {
 			forecast_sketch_f0.write(meta.hash,meta.new_forecast);
 		} else { //else, only update with observed
 			//update error
-			error_sketch_f1.read(meta.err,meta.hash);
+			reg_error_sketch_f1.read(meta.err,meta.hash);
 			meta.new_err = meta.err + 10;
 			error_sketch_f1.write(meta.hash,meta.new_err);
 
 			//update forecast
-			forecast_sketch_f0.read(meta.forecast,meta.hash);
+			reg_forecast_sketch_f0.read(meta.forecast,meta.hash);
 			meta.obs = 10 >> 1; //division by 2
 			meta.new_forecast = meta.obs + meta.forecast;
 
 			forecast_sketch_f0.write(meta.hash,meta.new_forecast);
 
 			//compute one extra op
-			extra_op_counter.read(meta.counter,num);
+			reg_extra_op_counter.read(meta.counter,num);
 			if (meta.counter < SKETCH_WIDTH) {
-				control_flag.read(meta.ctrl,meta.counter+meta.offset); 
+				reg_control_sketch_flag.read(meta.ctrl,meta.counter+meta.offset); 
 				if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
-					control_flag.write(meta.counter+meta.offset,1);
-					forecast_sketch_f1.read(meta.forecast,meta.counter+meta.offset);
+					control_sketch_flag.write(meta.counter+meta.offset,1);
+					reg_forecast_sketch_f1.read(meta.forecast,meta.counter+meta.offset);
 
 					//update error
 					meta.new_err_op = -meta.forecast; //negative
@@ -78,11 +78,11 @@ void KARY_UpdateRow(int num, inout metadata meta) {
 			}
 		}
 	} else {
-		control_flag.read(meta.ctrl,meta.hash); 
+		reg_control_sketch_flag.read(meta.ctrl,meta.hash); 
 		if (meta.ctrl != meta.flag) { //If equals, copy forecast_sketch
-			control_flag.write(meta.hash,0);
+			control_sketch_flag.write(meta.hash,0);
 			
-			forecast_sketch_f0.read(meta.forecast,meta.hash);
+			reg_forecast_sketch_f0.read(meta.forecast,meta.hash);
 			
 			//update error
 			meta.new_err = 10 - meta.forecast;
@@ -98,24 +98,24 @@ void KARY_UpdateRow(int num, inout metadata meta) {
 
 		} else { //else, only update with observed
 			//update error
-			error_sketch_f0.read(meta.err,meta.hash);
+			reg_error_sketch_f0.read(meta.err,meta.hash);
 			meta.new_err = meta.err + 10;
 			error_sketch_f0.write(meta.hash,meta.new_err);
 
 			//update forecast
-			forecast_sketch_f1.read(meta.forecast,meta.hash);
+			reg_forecast_sketch_f1.read(meta.forecast,meta.hash);
 			meta.obs = 10 >> 1; //division by 2
 			meta.new_forecast = meta.obs + meta.forecast;
 
 			forecast_sketch_f1.write(meta.hash,meta.new_forecast);
 
 			//compute one extra op
-			extra_op_counter.read(meta.counter,num);
+			reg_extra_op_counter.read(meta.counter,num);
 			if (meta.counter >= 0) {
-				control_flag.read(meta.ctrl,meta.counter+meta.offset); 
+				reg_control_sketch_flag.read(meta.ctrl,meta.counter+meta.offset); 
 				if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
-					control_flag.write(meta.counter+meta.offset,0);
-					forecast_sketch_f0.read(meta.forecast,meta.counter+meta.offset);
+					control_sketch_flag.write(meta.counter+meta.offset,0);
+					reg_forecast_sketch_f0.read(meta.forecast,meta.counter+meta.offset);
 
 					//update error
 					meta.new_err_op = -meta.forecast; //negative
@@ -132,9 +132,9 @@ void KARY_UpdateRow(int num, inout metadata meta) {
 		}
 	}
 	if (meta.new_err > 0) {
-		mv.write(num,1);
+		reg_mv_flag.write(num,1);
 	} else {
-		mv.write(num,0);
+		reg_mv_flag.write(num,0);
 	}
 }
 
@@ -144,9 +144,9 @@ void KARY_UpdateRow(int num, inout metadata meta) {
 void MV_UpdateRow(inout metadata meta, inout headers hdr) {
 	//compare candidate flow key with current flow key
 	if (meta.flag == 0) {
-		srcAddr_f0.read(meta.tempsrc, meta.hash);
-		dstAddr_f0.read(meta.tempdst, meta.hash);
-		sketch_count_f0.read(meta.tempcount, meta.hash);
+		reg_srcAddr_f0.read(meta.tempsrc, meta.hash);
+		reg_dstAddr_f0.read(meta.tempdst, meta.hash);
+		reg_sketch_count_f0.read(meta.tempcount, meta.hash);
 		if (meta.tempsrc!= hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
 			if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
 				srcAddr_f0.write(meta.hash, hdr.ipv4.srcAddr);
@@ -162,9 +162,9 @@ void MV_UpdateRow(inout metadata meta, inout headers hdr) {
 			sketch_count_f0.write(meta.hash, meta.tempcount);
 		}
 	} else {
-		srcAddr_f1.read(meta.tempsrc, meta.hash);
-		dstAddr_f1.read(meta.tempdst, meta.hash);
-		sketch_count_f1.read(meta.tempcount, meta.hash);
+		reg_srcAddr_f1.read(meta.tempsrc, meta.hash);
+		reg_dstAddr_f1.read(meta.tempdst, meta.hash);
+		reg_sketch_count_f1.read(meta.tempcount, meta.hash);
 		if (meta.tempsrc != hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
 			if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
 				srcAddr_f1.write(meta.hash, hdr.ipv4.srcAddr);
@@ -220,7 +220,7 @@ control MyIngress(inout headers hdr,
 
 
     apply {
-		total_num_packets.read(meta.num_packets,0);
+		reg_total_num_packets.read(meta.num_packets,0);
 		meta.num_packets = meta.num_packets + 1;
 		total_num_packets.write(0,meta.num_packets);
 
@@ -233,9 +233,9 @@ control MyIngress(inout headers hdr,
 			/********************************************************/
 			/***************** EPOCH VERIFICATION *******************/
 
-			epoch.read(meta.epoch,0);
-			sketch_flag.read(meta.flag,0);
-			first.read(meta.first,0);
+			reg_epoch.read(meta.epoch,0);
+			reg_sketch_flag.read(meta.flag,0);
+			reg_first.read(meta.first,0);
 			//check if new packet is inside current epoch or in the next one
 			if (meta.epoch >= EPOCH_SIZE) { 
 				epoch.write(0,1); //reset packet counter
@@ -295,7 +295,7 @@ control MyIngress(inout headers hdr,
 			MV_UpdateRow(meta,hdr);
 
 		} else {
-			//epoch.read(meta.epoch,0);
+			//reg_epoch.read(meta.epoch,0);
 			//meta.epoch = meta.epoch + 1;
 			//epoch.write(0,meta.epoch); //reset packet counter
 		}

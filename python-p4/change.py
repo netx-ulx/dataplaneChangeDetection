@@ -1,4 +1,3 @@
-import mmh3
 import string
 from copy import deepcopy
 from statistics import median

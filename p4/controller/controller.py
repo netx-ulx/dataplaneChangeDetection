@@ -10,13 +10,10 @@ import itertools
 crc32_polinomials = [0x04C11DB7, 0xEDB88320, 0xDB710641, 0x82608EDB, 0x741B8CD7, 0xEB31D82E,
                     0xD663B05, 0xBA0DC66B, 0x32583499, 0x992C1A4C, 0x32583499, 0x992C1A4C]
 
-#crc32_polinomials = [0x04C11DB7, 0x04C11DB7, 0x04C11DB7, 0x04C11DB7, 0x04C11DB7, 0x04C11DB7,
-#                     0x04C11DB7, 0x04C11DB7, 0x04C11DB7, 0x04C11DB7, 0x04C11DB7, 0x04C11DB7]
-
 class CMSController(object):
 
     def __init__(self,port,set_hash):
-        self.max_int = 4294967295
+        self.max_int = 4294967296
         self.controller = SimpleSwitchAPI(port)
         self.set_hash = set_hash
         self.custom_calcs = self.controller.get_custom_crc_calcs()
@@ -61,29 +58,29 @@ class CMSController(object):
     
     def read_registers(self):
         self.registers = []
-        self.registers.append(self.controller.register_read("sketch_flag"))             #0 flag
+        self.registers.append(self.controller.register_read("reg_sketch_flag"))             #0 flag
         if self.registers[0] != self.flag:
             self.flag = self.registers[0]
             if (self.registers[0][0] == 0): #choose error and mv sketch
-                self.registers.append(self.controller.register_read("srcAddr_f1"))      #1 src ips
-                self.registers.append(self.controller.register_read("dstAddr_f1"))      #2 dst ips
-                self.registers.append(self.controller.register_read("error_sketch_f1")) #3 error sketch
-                self.registers.append(self.controller.register_read("packet_changed"))  #4 total num packets
+                self.registers.append(self.controller.register_read("reg_srcAddr_f1"))      #1 src ips
+                self.registers.append(self.controller.register_read("reg_dstAddr_f1"))      #2 dst ips
+                self.registers.append(self.controller.register_read("reg_error_sketch_f1")) #3 error sketch
+                self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
 
                 #reset mv keys and counters
-                self.controller.register_reset("srcAddr_f1")
-                self.controller.register_reset("dstAddr_f1")
-                self.controller.register_reset("sketch_count_f1")
+                self.controller.register_reset("reg_srcAddr_f1")
+                self.controller.register_reset("reg_dstAddr_f1")
+                self.controller.register_reset("reg_sketch_count_f1")
             else:
-                self.registers.append(self.controller.register_read("srcAddr_f0"))      #1 src ips
-                self.registers.append(self.controller.register_read("dstAddr_f0"))      #2 dst ips
-                self.registers.append(self.controller.register_read("error_sketch_f0")) #3 error sketch
-                self.registers.append(self.controller.register_read("packet_changed"))  #4 total num packets
+                self.registers.append(self.controller.register_read("reg_srcAddr_f0"))      #1 src ips
+                self.registers.append(self.controller.register_read("reg_dstAddr_f0"))      #2 dst ips
+                self.registers.append(self.controller.register_read("reg_error_sketch_f0")) #3 error sketch
+                self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
 
                 #reset mv keys and counters
-                self.controller.register_reset("srcAddr_f0")
-                self.controller.register_reset("dstAddr_f0")
-                self.controller.register_reset("sketch_count_f0")   
+                self.controller.register_reset("reg_srcAddr_f0")
+                self.controller.register_reset("reg_dstAddr_f0")
+                self.controller.register_reset("reg_sketch_count_f0")   
         else:
             self.registers[0] = None
 
@@ -110,84 +107,89 @@ if __name__ == "__main__":
     parser.add_argument('--sw', help="switch name to configure" , type=str, required=False, default="s1")
     parser.add_argument('--port', help="thrift server port" , type=int, required=False, default="9090")
     parser.add_argument('--width', help="width of the sketch (number of buckets per row)", type=int, required=False, default=64)
-    parser.add_argument('--thresh', help="threshold for the change detection module", type=float, required=False, default=0.1)
+    parser.add_argument('--thresh', help="threshold for the change detection module", type=float, required=False, default=0.5)
     parser.add_argument('--depth', help="depth of the sketch (number of rows)", type=int, required=False, default=3)
     parser.add_argument('--epoch', help="seconds in each epoch", type=int, required=False, default=1)
-    parser.add_argument('--option', help="controller option can be either set_hashes, decode or reset registers", type=str, required=False, default="set_hashes")
     args = parser.parse_args()
 
     set_hashes = args.option == "set_hashes"
     controller = CMSController(args.port,True) #True if we want to use custom polynomials
 
-    if args.option == "detect":
-        epoch = -1
-        while(True):    
-            controller.decode_registers()
-            if controller.registers[0] == None:
-                time.sleep(args.epoch)
-                continue
-            error, raw_src, raw_dst, num_packets = controller.detect_change(args.depth)
-            error_sketch = KAry_Sketch(len(error),len(error[0]))
-            error_sketch.sketch = error
+    epoch = -1
+    while(True):
+        #retrieve data from data plane    
+        controller.decode_registers()
 
-            if epoch <= 0:
-                epoch = epoch + 1
-                continue
-
-            str_src = []
-            for src in raw_src:
-                if src > 0:
-                    binsrc = "{:032b}".format(src)
-                    str_src.append(str(int(binsrc[0:8],2))+"."+str(int(binsrc[8:16],2))+"."+str(int(binsrc[16:24],2))+"."+str(int(binsrc[24:32],2))) #get dst ip
-                else:
-                    str_src.append("0")
-
-            str_dst = []
-            for dst in raw_dst:
-                if dst > 0:
-                    bindst = "{:032b}".format(dst)
-                    str_dst.append(str(int(bindst[0:8],2))+"."+str(int(bindst[8:16],2))+"."+str(int(bindst[16:24],2))+"."+str(int(bindst[24:32],2))) #get dst ip
-                else:
-                    str_dst.append("0")
-
-            indexes = []
-            for i in range(0,len(str_src)):
-                if str_src[i] != "0":
-                    indexes.append(controller.get_index([str_src[i],str_dst[i]],args.width))
-                else:
-                    indexes.append("0")
-
-            k = []
-            for i in range(0,len(str_dst)): 
-                k.append([str_src[i],str_dst[i],indexes[i]])
-
-            keys = []
-            for key in k:
-                if key in keys:
-                    pass
-                else:
-                    keys.append(key)
-
-            for row in range(0,len(error_sketch.sketch)):
-                for value in range(0,len(error_sketch.sketch[row])):
-                    error_sketch.sketch[row][value] = error_sketch.sketch[row][value] / 10
-
-            #Compute threshold
-            TA = args.thresh * sqrt(error_sketch.ESTIMATEF2())
-
-            changes = []
-            all_keys = []
-            #Estimate error for each key
-            for i in range(0,len(keys)):
-                if keys[i][0] != "0":
-                    estimate = error_sketch.ESTIMATE(keys[i][2])
-                    all_keys.append([(keys[i][0],keys[i][1],estimate,keys[i][2])])
-                    if estimate > TA:
-                        changes.append((keys[i][0],keys[i][1],estimate,keys[i][2]))
-                        #print("Change detected for:", keys[i][0] + "," + keys[i][1], "with estimate:", estimate)
-	    with open("controller.out",'a') as f:
-	    	f.write("Epoch: " + str(epoch) + "       " + "Threshold: " + str(TA) + "       " + "Num Packets: " + str(num_packets[0]) +'\n')
-            	f.write("Change: " + str(changes) + '\n')
-            	f.write("Number of Flows: " + str(len(all_keys)) + '\n')
-            epoch = epoch + 1
+        #check if a new epoch as been captured
+        if controller.registers[0] == None:
             time.sleep(args.epoch)
+            continue
+
+        error, raw_src, raw_dst, num_packets = controller.detect_change(args.depth)
+        error_sketch = KAry_Sketch(len(error),len(error[0]))
+        error_sketch.sketch = error
+
+        #do not perform change detection before the end of the second epoch
+        if epoch <= 0:
+            epoch = epoch + 1
+            continue
+
+        str_src = []
+        for src in raw_src:
+            if src > 0:
+                binsrc = "{:032b}".format(src)
+                str_src.append(str(int(binsrc[0:8],2))+"."+str(int(binsrc[8:16],2))+"."+str(int(binsrc[16:24],2))+"."+str(int(binsrc[24:32],2))) #get dst ip
+            else:
+                str_src.append("0")
+
+        str_dst = []
+        for dst in raw_dst:
+            if dst > 0:
+                bindst = "{:032b}".format(dst)
+                str_dst.append(str(int(bindst[0:8],2))+"."+str(int(bindst[8:16],2))+"."+str(int(bindst[16:24],2))+"."+str(int(bindst[24:32],2))) #get dst ip
+            else:
+                str_dst.append("0")
+
+        indexes = []
+        for i in range(0,len(str_src)):
+            if str_src[i] != "0":
+                indexes.append(controller.get_index([str_src[i],str_dst[i]],args.width))
+            else:
+                indexes.append("0")
+
+        k = []
+        for i in range(0,len(str_dst)): 
+            k.append([str_src[i],str_dst[i],indexes[i]])
+
+        keys = []
+        for key in k:
+            if key in keys:
+                pass
+            else:
+                keys.append(key)
+
+        for row in range(0,len(error_sketch.sketch)):
+            for value in range(0,len(error_sketch.sketch[row])):
+                error_sketch.sketch[row][value] = error_sketch.sketch[row][value] / 10
+
+        #Compute threshold
+        TA = args.thresh * sqrt(error_sketch.ESTIMATEF2())
+
+        #Estimate error for each key
+        changes = []
+        all_keys = []
+        for i in range(0,len(keys)):
+            if keys[i][0] != "0":
+                estimate = error_sketch.ESTIMATE(keys[i][2])
+                all_keys.append([(keys[i][0],keys[i][1],estimate,keys[i][2])])
+                if estimate > TA:
+                    changes.append((keys[i][0],keys[i][1],estimate,keys[i][2]))
+                    #print("Change detected for:", keys[i][0] + "," + keys[i][1], "with estimate:", estimate)
+
+        #write changes to file            
+        with open("controller.out",'a') as f:
+            f.write("Epoch: " + str(epoch) + "       " + "Threshold: " + str(TA) + "       " + "Num Packets: " + str(num_packets[0]) +'\n')
+            f.write("Change: " + str(changes) + '\n')
+            f.write("Number of Flows: " + str(len(all_keys)) + '\n')
+        epoch = epoch + 1
+        time.sleep(args.epoch)

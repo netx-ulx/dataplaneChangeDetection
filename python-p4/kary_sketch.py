@@ -1,4 +1,3 @@
-import mmh3
 import string
 from statistics import median
 from math import sqrt
@@ -60,8 +59,8 @@ class KAry_Sketch:
             for _ in range(0,width):
                 self.sketch[i].append(0)
         #initialize the hash seeds for each row
-        for i in range(0,depth):
-            self.seeds.append(mmh3.hash64("K-ARY SKETCH",i)[0])
+        #for i in range(0,depth):
+            #self.seeds.append(mmh3.hash64("K-ARY SKETCH",i)[0])
 
         self.init()
 
@@ -85,8 +84,8 @@ class KAry_Sketch:
             bucket = None
             if hash_func == "crc32":
                 bucket = self.get_index(key)[i]
-            elif hash_func == "murmur3":
-                bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
+            #elif hash_func == "murmur3":
+                #bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
             self.sketch[i][bucket] = self.sketch[i][bucket] + value
 
 
@@ -111,8 +110,8 @@ class KAry_Sketch:
             bucket = None
             if hash_func == "crc32":
                 bucket = self.get_index(key)[i]
-            elif hash_func == "murmur3":
-                bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
+            #elif hash_func == "murmur3":
+                #bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
             result.append( (self.sketch[i][bucket] - (self.sum()/self.width)) / (1 - (1/self.width)))
         return median(result)
 
