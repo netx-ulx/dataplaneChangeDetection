@@ -234,7 +234,7 @@ control MyIngress(inout headers hdr,
 			/***************** EPOCH VERIFICATION *******************/
 
 			reg_epoch.read(meta.epoch,0);
-			reg_control_sketch_flag.read(meta.flag,0);
+			reg_sketch_flag.read(meta.flag,0);
 			reg_first.read(meta.first,0);
 			//check if new packet is inside current epoch or in the next one
 			if (meta.epoch >= EPOCH_SIZE) { 
@@ -243,13 +243,13 @@ control MyIngress(inout headers hdr,
 				// start new epoch by changing sketch flag and resetting other counters
 				if (meta.flag == 0) {
 					meta.flag = 1;
-					reg_control_sketch_flag.write(0,meta.flag);
+					reg_sketch_flag.write(0,meta.flag);
 					reg_extra_op_counter.write(0,0);
 					reg_extra_op_counter.write(1,0);
 					reg_extra_op_counter.write(2,0);
 				} else {
 					meta.flag = 0;
-					reg_control_sketch_flag.write(0,meta.flag);
+					reg_sketch_flag.write(0,meta.flag);
 					reg_extra_op_counter.write(0,SKETCH_WIDTH-1);
 					reg_extra_op_counter.write(1,SKETCH_WIDTH-1);
 					reg_extra_op_counter.write(2,SKETCH_WIDTH-1);
