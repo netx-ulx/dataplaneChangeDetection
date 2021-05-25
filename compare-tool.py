@@ -61,12 +61,11 @@ def parse_p4(file):
 
 
 def main():
-    python_path = sys.argv[1]
-    p4_path = sys.argv[2]
-    p4_file = open(p4_path, 'r')
-    python_file = open(python_path, 'r')
+    path = sys.argv[1]
+    p4_file = open("python-approx/output/" + path, 'r')
+    python_file = open("python-p4/output/" + path, 'r')
 
-    p4_thresholds, p4_changes, p4_flows = parse_p4(p4_file)
+    p4_thresholds, p4_changes = parse_python(p4_file)
     python_thresholds, python_changes = parse_python(python_file)
 
     threshold_errors = []
@@ -98,13 +97,11 @@ def main():
                     break
             if found == False:
                 false_positives = false_positives + 1
-    print("Total number of flows: ", sum(p4_flows))
     print("Threshold Percent Error:", mean(threshold_percent_errors)*100, "%")
     print("Estimate Percent Error:", mean(estimate_percent_errors)*100, "%")
     print("False Positives:",false_positives)
     print("False Negatives:",less_detections+false_positives)
     print("True Positives:", true_positives)
-    print("True Negatives:",(sum(p4_flows)-false_positives)-(less_detections+false_positives)-true_positives)
         
 if __name__ == "__main__":
     main()
