@@ -74,7 +74,7 @@ class KAry_Sketch:
         result = []
         for i in range(0,self.depth):
             bucket = buckets[i]
-            result.append((self.sketch[i][bucket] - (self.sum(i)/self.width)) / (1 - (1/self.width)))
+            result.append((float(self.sketch[i][bucket]) - (float(self.sum(i))/float(self.width))) / (1.0 - (1.0/float(self.width))))
         return median(result)
 
     def sum(self,i):
@@ -85,7 +85,6 @@ class KAry_Sketch:
         float
             The sum of all values in the sketch
         """
-
         return sum(self.sketch[i])
 
     def ESTIMATEF2(self):
@@ -99,10 +98,10 @@ class KAry_Sketch:
 
         result = []
         for i in range(0,self.depth):
-            aux = 0
+            aux = 0.0
             for j in range(0,self.width):
                 aux = aux + (self.sketch[i][j]**2) 
-            result.append(((self.width/(self.width-1))*aux) - ((1/(self.width-1))*(self.sum(i)**2)))
+	    result.append(((float(self.width)/(float(self.width)-1.0))*float(aux)) - ((1.0/(float(self.width)-1.0))*(self.sum(i)**2.0)))
         return median(result)
 
     def COMBINE(self,sketch):

@@ -166,10 +166,7 @@ if __name__ == "__main__":
                 pass
             else:
                 keys.append(key)
-
-        for row in range(0,len(error_sketch.sketch)):
-            for value in range(0,len(error_sketch.sketch[row])):
-                error_sketch.sketch[row][value] = error_sketch.sketch[row][value] / 10
+        #error_sketch.SHOW()
 
         #Compute threshold
         TA = args.thresh * sqrt(error_sketch.ESTIMATEF2())
