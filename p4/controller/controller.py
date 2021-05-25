@@ -112,7 +112,6 @@ if __name__ == "__main__":
     parser.add_argument('--epoch', help="seconds in each epoch", type=int, required=False, default=1)
     args = parser.parse_args()
 
-    set_hashes = args.option == "set_hashes"
     controller = CMSController(args.port,True) #True if we want to use custom polynomials
 
     epoch = -1
