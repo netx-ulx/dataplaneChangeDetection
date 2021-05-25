@@ -239,7 +239,8 @@ control MyIngress(inout headers hdr,
 			//check if new packet is inside current epoch or in the next one
 			if (meta.epoch >= EPOCH_SIZE) { 
 				reg_epoch.write(0,1); //reset packet counter
-				reg_first.write(0,1);
+				meta.first = 1;
+				reg_first.write(0,meta.first);
 				// start new epoch by changing sketch flag and resetting other counters
 				if (meta.flag == 0) {
 					meta.flag = 1;
