@@ -53,7 +53,7 @@ class KAry_Sketch:
         self.width = width
         self.sketch = []
         self.keys = []
-        self.counts = []
+        #self.counts = []
         self.seeds = []
         #initialize the sketch structure
         for i in range(0,depth):
@@ -61,15 +61,15 @@ class KAry_Sketch:
             for _ in range(0,width):
                 self.sketch[i].append(0)
 
-        for i in range(0,depth):
-            self.keys.append([])
-            for _ in range(0,width):
-                self.keys[i].append((None,None))
+        #for i in range(0,depth):
+        #    self.keys.append([])
+        #    for _ in range(0,width):
+        #        self.keys[i].append((None,None))
 
-        for i in range(0,depth):
-            self.counts.append([])
-            for _ in range(0,width):
-                self.counts[i].append(0)
+        #for i in range(0,depth):
+        #    self.counts.append([])
+        #    for _ in range(0,width):
+        #       self.counts[i].append(0)
         #initialize the hash seeds for each row
         #for i in range(0,depth):
             #self.seeds.append(mmh3.hash64("K-ARY SKETCH",i)[0])
@@ -99,14 +99,17 @@ class KAry_Sketch:
             #Update K-ary
             self.sketch[i][bucket] = self.sketch[i][bucket] + value
 
+            if key not in self.keys:
+                self.keys.append(key)
+
             #Update MV
-            if self.keys[i][bucket][0] == key[0] and self.keys[i][bucket][1] == key[1]:
-                self.counts[i][bucket] = self.counts[i][bucket] + 1
-            else:
-                self.counts[i][bucket] = self.counts[i][bucket] - 1
-                if self.counts[i][bucket] < 0:
-                    self.keys[i][bucket] = key
-                    self.counts[i][bucket] = - self.counts[i][bucket]
+            #if self.keys[i][bucket][0] == key[0] and self.keys[i][bucket][1] == key[1]:
+            #    self.counts[i][bucket] = self.counts[i][bucket] + 1
+            #else:
+            #    self.counts[i][bucket] = self.counts[i][bucket] - 1
+            #    if self.counts[i][bucket] < 0:
+            #        self.keys[i][bucket] = key
+            #        self.counts[i][bucket] = - self.counts[i][bucket]
 
     def ESTIMATE(self,key,hash_func):
         """Estimates the value for a given key
@@ -215,9 +218,9 @@ class KAry_Sketch:
 
     def RESET(self):
         """Resets the sketch by zeroing the sketch matrix"""
-
+        self.keys = []
         for i in range(0,self.depth):
             for j in range(0,self.width):
                 self.sketch[i][j] = 0
-                self.keys[i][j] = (None,None)
-                self.counts[i][j] = 0
+                #self.keys[i][j] = (None,None)
+                #self.counts[i][j] = 0

@@ -127,11 +127,11 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
                 complex_res = []
                 res = []
                 keys = []
-                for row in sketch_list[-1].keys:
-                    for key in row:
-                        keys.append(key)
+                #for row in sketch_list[-1].keys:
+                    #for key in row:
+                        #keys.append(key)
 
-                keys = removeDuplicates(keys)
+                keys = removeDuplicates(sketch_list[-1].keys)
                 if (None,None) in keys:
                     keys.remove((None,None))
 
