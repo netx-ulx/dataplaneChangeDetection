@@ -102,7 +102,7 @@ def main():
     with open('output/' + path[10:-5] + "-" + str(kary_epoch) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
       sys.stdout = f
       for epoch in complex_result:
-        print("Epoch:", epoch["epoch"][1], "      " + "Threshold: " + str(epoch["epoch"][0]), "      " + "Num Packets: " + str(epoch["epoch"][3]))
+        print("Epoch:", epoch["epoch"][1][0], "      " + "Threshold: " + str(epoch["epoch"][0]), "      " + "Num Packets: " + str(epoch["epoch"][3]))
         print(epoch["res"])
         total_num_packets = total_num_packets + int(epoch["epoch"][4])
         print("Num Keys:",str(epoch["epoch"][4]))
