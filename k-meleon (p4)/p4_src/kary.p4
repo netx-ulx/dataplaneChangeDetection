@@ -29,7 +29,7 @@ void KARY_UpdateRow_f0(int num, inout metadata meta) {
 	//SKETCH + FORECASTING MODULE
 	reg_control_sketch_flag.read(meta.ctrl,meta.hash); 
 	if (meta.ctrl != meta.flag) { //If equals, copy forecast_sketch
-		reg_control_sketch_flag.write(meta.hash,1);
+		reg_control_sketch_flag.write(meta.hash,meta.flag);
 		
 		reg_forecast_sketch.read(meta.forecast,meta.hash);
 		
@@ -60,7 +60,7 @@ void KARY_UpdateRow_f0(int num, inout metadata meta) {
 		if (meta.counter < SKETCH_WIDTH) {
 			reg_control_sketch_flag.read(meta.ctrl,meta.counter+meta.offset); 
 			if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
-				reg_control_sketch_flag.write(meta.counter+meta.offset,1);
+				reg_control_sketch_flag.write(meta.counter+meta.offset,meta.flag);
 				reg_forecast_sketch.read(meta.forecast,meta.counter+meta.offset);
 
 				//update error
@@ -80,7 +80,7 @@ void KARY_UpdateRow_f1(int num, inout metadata meta) {
 	//SKETCH + FORECASTING MODULE
 	reg_control_sketch_flag.read(meta.ctrl,meta.hash); 
 	if (meta.ctrl != meta.flag) { //If equals, copy forecast_sketch
-		reg_control_sketch_flag.write(meta.hash,1);
+		reg_control_sketch_flag.write(meta.hash,meta.flag);
 		
 		reg_forecast_sketch.read(meta.forecast,meta.hash);
 		
@@ -111,7 +111,7 @@ void KARY_UpdateRow_f1(int num, inout metadata meta) {
 		if (meta.counter < SKETCH_WIDTH) {
 			reg_control_sketch_flag.read(meta.ctrl,meta.counter+meta.offset); 
 			if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
-				reg_control_sketch_flag.write(meta.counter+meta.offset,1);
+				reg_control_sketch_flag.write(meta.counter+meta.offset,meta.flag);
 				reg_forecast_sketch.read(meta.forecast,meta.counter+meta.offset);
 
 				//update error
@@ -128,20 +128,10 @@ void KARY_UpdateRow_f1(int num, inout metadata meta) {
 }
 
 void KARY_UpdateRow_First_Epoch(int num, inout metadata meta) {
-	//SKETCH + FORECASTING MODULE
-	reg_control_sketch_flag.read(meta.ctrl,meta.hash); 
-	if (meta.ctrl != meta.flag) { //If equals, copy entire value
-		reg_control_sketch_flag.write(meta.hash,1);
-
-		//update forecast
-		meta.obs = 10; //division by 2
-		reg_forecast_sketch.write(meta.hash,meta.obs); //update
-	} else { //else, add entire value to existing value
-		//update forecast
-		reg_forecast_sketch.read(meta.forecast,meta.hash);
-		meta.new_forecast = 10 + meta.forecast; //sum with old value
-		reg_forecast_sketch.write(meta.hash,meta.new_forecast); //update
-	}
+	//update forecast
+	reg_forecast_sketch.read(meta.forecast,meta.hash);
+	meta.new_forecast = 10 + meta.forecast; //sum with old value
+	reg_forecast_sketch.write(meta.hash,meta.new_forecast); //update
 }
 
 /********************************************************/
