@@ -15,8 +15,7 @@ register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_sketch_count_f1;   // count fie
 //*--------------------------------------------------------------------------------------------------------------*//
 
 register<bit<1>>(1) reg_sketch_flag;                                        // 1 bit flag for forecast sketch selection
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_forecast_sketch_f0;    // forecast sketch used when the sketch flag is 0
-register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_forecast_sketch_f1;    // forecast sketch used when the sketch flag is 1
+register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_forecast_sketch;    // forecast sketch used when the sketch flag is 0
 register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_error_sketch_f0;       // error sketch used when the sketch flag is 0
 register<int<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_error_sketch_f1;       // error sketch used when the sketch flag is 1
 register<bit<1>>(SKETCH_WIDTH*SKETCH_DEPTH)  reg_control_sketch_flag;   // 1 bit control-flag sketch
