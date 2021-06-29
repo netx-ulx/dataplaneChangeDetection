@@ -57,7 +57,7 @@ void KARY_UpdateRow_f0(int num, inout metadata meta) {
 
 		//compute one extra op
 		reg_extra_op_counter.read(meta.counter,num);
-		if (meta.counter < SKETCH_WIDTH) {
+		if (meta.counter >= 0) {
 			reg_control_sketch_flag.read(meta.ctrl,meta.counter+meta.offset); 
 			if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
 				reg_control_sketch_flag.write(meta.counter+meta.offset,meta.flag);
@@ -71,7 +71,7 @@ void KARY_UpdateRow_f0(int num, inout metadata meta) {
 				meta.new_forecast = meta.forecast >> 1; //division by 2
 				reg_forecast_sketch.write(meta.counter+meta.offset,meta.new_forecast);
 			}
-			reg_extra_op_counter.write(num,meta.counter+1);
+			reg_extra_op_counter.write(num,meta.counter-1);
 		}
 	}
 }
