@@ -1,3 +1,7 @@
+typedef bit<9> egressSpec_t;
+typedef bit<48> macAddr_t;
+typedef bit<32> ip4Addr_t;
+
 /*************************************************************
 *****************   HEADERS *********************************
 **************************************************************/
@@ -45,33 +49,41 @@ header udp_t {
 }
 
 struct metadata {
-    bit<32> hash;
-	bit<32> hash0;
-	bit<32> hash1;
-	bit<32> hash2;
-    bit<32> tempsrc;
-    bit<32> tempdst;
-    int<32> tempcount;
-    int<32> tempsum;
-    bit<1> repass;
-    bit<1> flag;
-
-	bit<1> ctrl;
-    bit<1> first;
-	bit<32> counter;
-	bit<32> offset;
+	/* To index the sketch cells */
+	bit<32> hash0_value;
+	bit<32> hash1_value;
+	bit<32> hash2_value;
+	/* ------------------------ */
+	/* To manage epoch changes  */
+    bit<1> epoch_bit;
+	bit<1> ctrl_bit;
+    bit<1> first_epoch_flag;
+    bit<1> epoch_changed_flag;
+    bit<1> ctrl_changed_flag;
+	bit<32> offset; // to read the proper epoch values from the skecth registers
+	bit<48> epoch_value; // epoch in # of packets or bmv2 ingress-timestamp (<48>)
+	/* ------------------------ */
+	/* To compute sketch updates */
 	int<32> obs;
 	int<32> err;
-    int<32> num_packets;
-	bit<32> epoch; // epoch in # of packets
 	int<32> forecast;
 	int<32> aux_forecast;
 	int<32> new_forecast;
 	int<32> new_err;
-    int<32> new_err_op;
-
-    bit<1> mv;
-
+	/* ------------------------ */
+	#ifdef REVERT
+    bit<64> current_flowKey;
+    bit<64> stored_flowKey;
+    int<32> flowKey_count;
+	#endif
+	/* ------------------------ */
+	#ifdef COUNT_PKT
+    int<32> num_packets;
+	#endif
+	/* ------------------------ */
+	#ifdef EXTRA_OP
+	bit<32> extraOp_counter;
+	#endif
 }
 
 struct headers {
