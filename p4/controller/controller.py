@@ -68,7 +68,9 @@ class CMSController(object):
                 self.registers.append(self.controller.register_read("reg_flowdst_row0")[self.width:2*self.width])                        #2 dst ips
                 self.registers[2] = self.registers[2] + self.controller.register_read("reg_flowdst_row1")[self.width:2*self.width]       #1 dst ips
                 self.registers[2] = self.registers[2] + self.controller.register_read("reg_flowdst_row2")[self.width:2*self.width]       #1 dst ips
-                self.registers.append(self.controller.register_read("reg_error_sketch_f1")[self.width:2*self.width]) #3 error sketch
+                self.registers.append(self.controller.register_read("reg_error_sketch_row0")[self.width:2*self.width]) #3 error sketch
+                self.registers[2] = self.registers[2] + self.controller.register_read("reg_error_sketch_row1")[self.width:2*self.width]       #1 dst ips
+                self.registers[2] = self.registers[2] + self.controller.register_read("reg_error_sketch_row2")[self.width:2*self.width] 
                 self.registers.append(self.controller.register_read("reg_packet_changed")[self.width:2*self.width])  #4 total num packets
 
                 #reset mv keys and counters
@@ -88,7 +90,9 @@ class CMSController(object):
                 self.registers.append(self.controller.register_read("reg_flowdst_row0")[0:self.width])                        #2 dst ips
                 self.registers[2] = self.registers[2] + self.controller.register_read("reg_flowdst_row1")[0:self.width]       #1 dst ips
                 self.registers[2] = self.registers[2] + self.controller.register_read("reg_flowdst_row2")[0:self.width]       #1 dst ips
-                self.registers.append(self.controller.register_read("reg_error_sketch_f1")[0:self.width]) #3 error sketch
+                self.registers.append(self.controller.register_read("reg_error_sketch_row0")[0:self.width]) #3 error sketch
+                self.registers[2] = self.registers[2] + self.controller.register_read("reg_error_sketch_row1")[0:self.width]       #1 dst ips
+                self.registers[2] = self.registers[2] + self.controller.register_read("reg_error_sketch_row2")[0:self.width]
                 self.registers.append(self.controller.register_read("reg_packet_changed")[0:self.width])  #4 total num packets
 
                 #reset mv keys and counters
