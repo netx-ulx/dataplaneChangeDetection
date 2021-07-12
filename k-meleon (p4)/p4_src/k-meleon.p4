@@ -22,268 +22,18 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 }
 
 /*********************************************************
-***************** MAIN UPDATE FUNCTION ********************
+***************** UPDATE CONTROL BLOCKS ******************
 **********************************************************/
 
-void KARY_UpdateRow0(int offset,inout metadata meta) {
-	//SKETCH + FORECASTING MODULE
-	reg_controlFlag_sketch_row0.read(meta.ctrl,meta.hash0); 
-	if (meta.ctrl != meta.flag) { //If equals, copy forecast_sketch
-		reg_controlFlag_sketch_row0.write(meta.hash0,meta.flag);
-		
-		reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);
+#include "includes/controls.p4"
 
-		//update error
-		meta.new_err = 10 - meta.forecast;
-		if (offset == 0) {
-			reg_error_sketch0_row0.write(meta.hash0,meta.new_err);
-		} else {
-			reg_error_sketch1_row0.write(meta.hash0,meta.new_err);
-		}
 
-		//update forecast
-		meta.obs = 10 >> 1; //division by 2
-		meta.aux_forecast = meta.forecast >> 1; //division by 2
-		meta.new_forecast = meta.obs + meta.aux_forecast; //sum of both
+/*********************************************************
+************** REVERSIBILITY CONTROL BLOCKS **************
+**********************************************************/
 
-		reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast); //update
-	} else { //else, only update with observed
-		//update error
-		if (offset == 0) {
-			reg_error_sketch0_row0.read(meta.err,meta.hash0);
-			meta.new_err = meta.err + 10;
-			reg_error_sketch0_row0.write(meta.hash0,meta.new_err);
-		} else {
-			reg_error_sketch1_row0.read(meta.err,meta.hash0);
-			meta.new_err = meta.err + 10;
-			reg_error_sketch1_row0.write(meta.hash0,meta.new_err);
-		}
-		//update forecast
-		reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);
-		meta.obs = 10 >> 1; //division by 2
-		meta.new_forecast = meta.obs + meta.forecast; //sum with old value
-		reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast); //update
+#include "includes/reversibility.p4"
 
-		//compute one extra op
-		reg_extra_op_counter.read(meta.counter,0);
-		if (meta.counter < SKETCH_WIDTH) {
-			reg_controlFlag_sketch_row0.read(meta.ctrl,meta.counter); 
-			if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
-				reg_controlFlag_sketch_row0.write(meta.counter,meta.flag);
-				reg_forecast_sketch_row0.read(meta.forecast,meta.counter);
-
-				//update error
-				meta.new_err_op = -meta.forecast; //negative
-				if (offset == 0) {
-					reg_error_sketch0_row0.write(meta.counter,meta.new_err_op);
-				} else {
-					reg_error_sketch1_row0.write(meta.counter,meta.new_err_op);
-				}
-				//update forecast
-				meta.new_forecast = meta.forecast >> 1; //division by 2
-				reg_forecast_sketch_row0.write(meta.counter,meta.new_forecast);
-			}
-			reg_extra_op_counter.write(0,meta.counter+1);
-		}
-	}
-}
-
-void KARY_UpdateRow1(int offset,inout metadata meta) {
-	//SKETCH + FORECASTING MODULE
-	reg_controlFlag_sketch_row1.read(meta.ctrl,meta.hash1); 
-	if (meta.ctrl != meta.flag) { //If equals, copy forecast_sketch
-		reg_controlFlag_sketch_row1.write(meta.hash1,meta.flag);
-		
-		reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);
-		
-		//update error
-		meta.new_err = 10 - meta.forecast;
-		if (offset == 0) {
-			reg_error_sketch0_row1.write(meta.hash1,meta.new_err);
-		} else {
-			reg_error_sketch1_row1.write(meta.hash1,meta.new_err);
-		}
-
-		//update forecast
-		meta.obs = 10 >> 1; //division by 2
-		meta.aux_forecast = meta.forecast >> 1; //division by 2
-		meta.new_forecast = meta.obs + meta.aux_forecast; //sum of both
-
-		reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast); //update
-	} else { //else, only update with observed
-		//update error
-		
-		if (offset == 0) {
-			reg_error_sketch0_row1.read(meta.err,meta.hash1);
-			meta.new_err = meta.err + 10;
-			reg_error_sketch0_row1.write(meta.hash1,meta.new_err);
-		} else {
-			reg_error_sketch1_row1.read(meta.err,meta.hash1);
-			meta.new_err = meta.err + 10;
-			reg_error_sketch1_row1.write(meta.hash1,meta.new_err);
-		}
-
-		//update forecast
-		reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);
-		meta.obs = 10 >> 1; //division by 2
-		meta.new_forecast = meta.obs + meta.forecast; //sum with old value
-		reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast); //update
-
-		//compute one extra op
-		reg_extra_op_counter.read(meta.counter,1);
-		if (meta.counter < SKETCH_WIDTH) {
-			reg_controlFlag_sketch_row1.read(meta.ctrl,meta.counter); 
-			if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
-				reg_controlFlag_sketch_row1.write(meta.counter,meta.flag);
-				reg_forecast_sketch_row1.read(meta.forecast,meta.counter);
-
-				//update error
-				meta.new_err_op = -meta.forecast; //negative
-				if (offset == 0) {
-					reg_error_sketch0_row1.write(meta.counter,meta.new_err_op);
-				} else {
-					reg_error_sketch1_row1.write(meta.counter,meta.new_err_op);
-				}
-				
-				//update forecast
-				meta.new_forecast = meta.forecast >> 1; //division by 2
-				reg_forecast_sketch_row1.write(meta.counter,meta.new_forecast);
-			}
-			reg_extra_op_counter.write(1,meta.counter+1);
-		}
-	}
-}
-
-void KARY_UpdateRow2(int offset,inout metadata meta) {
-	//SKETCH + FORECASTING MODULE
-	reg_controlFlag_sketch_row2.read(meta.ctrl,meta.hash2); 
-	if (meta.ctrl != meta.flag) { //If equals, copy forecast_sketch
-		reg_controlFlag_sketch_row2.write(meta.hash2,meta.flag);
-		
-		reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);
-		
-		//update error
-		meta.new_err = 10 - meta.forecast;
-		if (offset == 0) {
-			reg_error_sketch0_row2.write(meta.hash2,meta.new_err);
-		} else {
-			reg_error_sketch1_row2.write(meta.hash2,meta.new_err);
-		}
-
-		//update forecast
-		meta.obs = 10 >> 1; //division by 2
-		meta.aux_forecast = meta.forecast >> 1; //division by 2
-		meta.new_forecast = meta.obs + meta.aux_forecast; //sum of both
-
-		reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast); //update
-	} else { //else, only update with observed
-		//update error
-		
-		if (offset == 0) {
-			reg_error_sketch0_row2.read(meta.err,meta.hash2);
-			meta.new_err = meta.err + 10;
-			reg_error_sketch0_row2.write(meta.hash2,meta.new_err);
-		} else {
-			reg_error_sketch1_row2.read(meta.err,meta.hash2);
-			meta.new_err = meta.err + 10;
-			reg_error_sketch1_row2.write(meta.hash2,meta.new_err);
-		}
-
-		//update forecast
-		reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);
-		meta.obs = 10 >> 1; //division by 2
-		meta.new_forecast = meta.obs + meta.forecast; //sum with old value
-		reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast); //update
-
-		//compute one extra op
-		reg_extra_op_counter.read(meta.counter,2);
-		if (meta.counter < SKETCH_WIDTH) {
-			reg_controlFlag_sketch_row2.read(meta.ctrl,meta.counter); 
-			if (meta.ctrl != meta.flag) { //If diff, copy forecast_sketch
-				reg_controlFlag_sketch_row2.write(meta.counter,meta.flag);
-				reg_forecast_sketch_row2.read(meta.forecast,meta.counter);
-
-				//update error
-				meta.new_err_op = -meta.forecast; //negative
-				if (offset == 0) {
-					reg_error_sketch0_row2.write(meta.counter,meta.new_err_op);
-				} else {
-					reg_error_sketch1_row2.write(meta.counter,meta.new_err_op);
-				}
-				
-				//update forecast
-				meta.new_forecast = meta.forecast >> 1; //division by 2
-				reg_forecast_sketch_row2.write(meta.counter,meta.new_forecast);
-			}
-			reg_extra_op_counter.write(2,meta.counter+1);
-		}
-	}
-}
-
-void KARY_UpdateEpoch1Row0(inout metadata meta) {
-	//update forecast
-	reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);
-	meta.new_forecast = 10 + meta.forecast; //sum with old value
-	reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast); //update
-}
-
-void KARY_UpdateEpoch1Row1(inout metadata meta) {
-	//update forecast
-	reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);
-	meta.new_forecast = 10 + meta.forecast; //sum with old value
-	reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast); //update
-}
-
-void KARY_UpdateEpoch1Row2(inout metadata meta) {
-	//update forecast
-	reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);
-	meta.new_forecast = 10 + meta.forecast; //sum with old value
-	reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast); //update
-}
-
-/********************************************************/
-/*********** MAJORITY VOTE ALGORITHM (MJRTY) ************/
-/********************************************************/
-void MV_UpdateRow(inout metadata meta, inout headers hdr) {
-	//compare candidate flow key with current flow key
-	if (meta.flag == 0) {
-		reg_srcAddr_f0.read(meta.tempsrc, meta.hash);
-		reg_dstAddr_f0.read(meta.tempdst, meta.hash);
-		reg_sketch_count_f0.read(meta.tempcount, meta.hash);
-		if (meta.tempsrc!= hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
-			if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
-				reg_srcAddr_f0.write(meta.hash, hdr.ipv4.srcAddr);
-				reg_dstAddr_f0.write(meta.hash, hdr.ipv4.dstAddr);
-				meta.tempcount = 1;
-				reg_sketch_count_f0.write(meta.hash, meta.tempcount);
-			} else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
-				meta.tempcount = meta.tempcount - 1;
-				reg_sketch_count_f0.write(meta.hash, meta.tempcount);
-			}		
-		} else { // if keys are equal increment counter by 1
-			meta.tempcount = meta.tempcount + 1;
-			reg_sketch_count_f0.write(meta.hash, meta.tempcount);
-		}
-	} else {
-		reg_srcAddr_f1.read(meta.tempsrc, meta.hash);
-		reg_dstAddr_f1.read(meta.tempdst, meta.hash);
-		reg_sketch_count_f1.read(meta.tempcount, meta.hash);
-		if (meta.tempsrc != hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
-			if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
-				reg_srcAddr_f1.write(meta.hash, hdr.ipv4.srcAddr);
-				reg_dstAddr_f1.write(meta.hash, hdr.ipv4.dstAddr);
-				meta.tempcount = 1;
-				reg_sketch_count_f1.write(meta.hash, meta.tempcount);
-			} else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
-				meta.tempcount = meta.tempcount - 1;
-				reg_sketch_count_f1.write(meta.hash, meta.tempcount);
-			}		
-		} else { // if keys are equal increment counter by 1
-			meta.tempcount = meta.tempcount + 1;
-			reg_sketch_count_f1.write(meta.hash, meta.tempcount);
-		}
-	}
-}
 
 /*********************************************************
 ***************** INGRESS PROCESSING *******************
@@ -292,7 +42,20 @@ void MV_UpdateRow(inout metadata meta, inout headers hdr) {
 control MyIngress(inout headers hdr,
 		  inout metadata meta,
 		  inout standard_metadata_t standard_metadata) {
-    action drop() {
+    
+	UpdateRow0() update_row0;
+	UpdateRow1() update_row1;
+	UpdateRow2() update_row2;
+	
+	UpdateEpoch1Row0() update_epoch1_row0;
+	UpdateEpoch1Row1() update_epoch1_row1;
+	UpdateEpoch1Row2() update_epoch1_row2;
+	
+	RevertRow() revert_row;
+	
+	
+	
+	action drop() {
 	mark_to_drop(standard_metadata);
     }
 
@@ -367,50 +130,30 @@ control MyIngress(inout headers hdr,
 
 			if(meta.first == 0) {
 				// first row
-				KARY_UpdateEpoch1Row0(meta);
+				update_epoch1_row0.apply(meta);
 
 				// second row
-				KARY_UpdateEpoch1Row1(meta);
+				update_epoch1_row1.apply(meta);
 
 				// third row
-				KARY_UpdateEpoch1Row2(meta);
+				update_epoch1_row2.apply(meta);
 			} else {
-				if (meta.flag == 0) {
-					// first row
-					meta.hash = meta.hash0;
-					KARY_UpdateRow0(0,meta);
-					MV_UpdateRow(meta,hdr);
+				// first row
+				meta.hash = meta.hash0;
+				update_row0.apply(meta);
+				revert_row.apply(meta,hdr);
 
-					// second row
-					meta.offset = SKETCH_WIDTH;
-					meta.hash = meta.hash1;
-					KARY_UpdateRow1(0,meta);
-					MV_UpdateRow(meta,hdr);
+				// second row
+				meta.offset = SKETCH_WIDTH;
+				meta.hash = meta.hash1;
+				update_row1.apply(meta);
+				revert_row.apply(meta,hdr);
 
-					// third row
-					meta.offset = SKETCH_WIDTH + SKETCH_WIDTH;
-					meta.hash = meta.hash2 + meta.offset;
-					KARY_UpdateRow2(0,meta);
-					MV_UpdateRow(meta,hdr);
-				} else {
-					// first row
-					meta.hash = meta.hash0;
-					KARY_UpdateRow0(1,meta);
-					MV_UpdateRow(meta,hdr);
-
-					// second row
-					meta.offset = SKETCH_WIDTH;
-					meta.hash = meta.hash1 + meta.offset;
-					KARY_UpdateRow1(1,meta);
-					MV_UpdateRow(meta,hdr);
-
-					// third row
-					meta.offset = SKETCH_WIDTH + SKETCH_WIDTH;
-					meta.hash = meta.hash2 + meta.offset;
-					KARY_UpdateRow2(1,meta);
-					MV_UpdateRow(meta,hdr);
-				}
-
+				// third row
+				meta.offset = SKETCH_WIDTH + SKETCH_WIDTH;
+				meta.hash = meta.hash2 + meta.offset;
+				update_row2.apply(meta);
+				revert_row.apply(meta,hdr);
 			}
 
 		} else {
