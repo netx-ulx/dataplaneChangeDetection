@@ -99,9 +99,9 @@ void KARY_UpdateRow1(int offset,inout metadata meta) {
 		//update error
 		meta.new_err = 10 - meta.forecast;
 		if (offset == 0) {
-			reg_error_sketch0_row1.write(meta.hash0,meta.new_err);
+			reg_error_sketch0_row1.write(meta.hash1,meta.new_err);
 		} else {
-			reg_error_sketch1_row1.write(meta.hash0,meta.new_err);
+			reg_error_sketch1_row1.write(meta.hash1,meta.new_err);
 		}
 
 		//update forecast
@@ -114,13 +114,13 @@ void KARY_UpdateRow1(int offset,inout metadata meta) {
 		//update error
 		
 		if (offset == 0) {
-			reg_error_sketch0_row1.read(meta.err,meta.hash0);
+			reg_error_sketch0_row1.read(meta.err,meta.hash1);
 			meta.new_err = meta.err + 10;
-			reg_error_sketch0_row1.write(meta.hash0,meta.new_err);
+			reg_error_sketch0_row1.write(meta.hash1,meta.new_err);
 		} else {
-			reg_error_sketch1_row1.read(meta.err,meta.hash0);
+			reg_error_sketch1_row1.read(meta.err,meta.hash1);
 			meta.new_err = meta.err + 10;
-			reg_error_sketch1_row1.write(meta.hash0,meta.new_err);
+			reg_error_sketch1_row1.write(meta.hash1,meta.new_err);
 		}
 
 		//update forecast
@@ -165,9 +165,9 @@ void KARY_UpdateRow2(int offset,inout metadata meta) {
 		//update error
 		meta.new_err = 10 - meta.forecast;
 		if (offset == 0) {
-			reg_error_sketch0_row2.write(meta.hash0,meta.new_err);
+			reg_error_sketch0_row2.write(meta.hash2,meta.new_err);
 		} else {
-			reg_error_sketch1_row2.write(meta.hash0,meta.new_err);
+			reg_error_sketch1_row2.write(meta.hash2,meta.new_err);
 		}
 
 		//update forecast
@@ -180,13 +180,13 @@ void KARY_UpdateRow2(int offset,inout metadata meta) {
 		//update error
 		
 		if (offset == 0) {
-			reg_error_sketch0_row2.read(meta.err,meta.hash0);
+			reg_error_sketch0_row2.read(meta.err,meta.hash2);
 			meta.new_err = meta.err + 10;
-			reg_error_sketch0_row2.write(meta.hash0,meta.new_err);
+			reg_error_sketch0_row2.write(meta.hash2,meta.new_err);
 		} else {
-			reg_error_sketch1_row2.read(meta.err,meta.hash0);
+			reg_error_sketch1_row2.read(meta.err,meta.hash2);
 			meta.new_err = meta.err + 10;
-			reg_error_sketch1_row2.write(meta.hash0,meta.new_err);
+			reg_error_sketch1_row2.write(meta.hash2,meta.new_err);
 		}
 
 		//update forecast

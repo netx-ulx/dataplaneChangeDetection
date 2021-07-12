@@ -32,8 +32,6 @@ register<bit<1>>(SKETCH_WIDTH)  reg_controlFlag_sketch_row0;   // control-flag s
 register<bit<1>>(SKETCH_WIDTH)  reg_controlFlag_sketch_row1;
 register<bit<1>>(SKETCH_WIDTH)  reg_controlFlag_sketch_row2;
 
-register<bit<1>>(SKETCH_WIDTH*SKETCH_DEPTH)  reg_control_sketch_flag;   // 1 bit control-flag sketch
-
 //*--------------------------------------------------------------------------------------------------------------*//
 //*---------------------------------------------Application Registers--------------------------------------------*//
 //*--------------------------------------------------------------------------------------------------------------*//

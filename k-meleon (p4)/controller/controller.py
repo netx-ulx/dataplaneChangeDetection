@@ -12,13 +12,13 @@ crc32_polinomials = [0x04C11DB7, 0xEDB88320, 0xDB710641, 0x82608EDB, 0x741B8CD7,
 
 class CMSController(object):
 
-    def __init__(self,port,set_hash):
+    def __init__(self,width,port,set_hash):
         self.max_int = 4294967296
         self.controller = SimpleSwitchAPI(port)
         self.set_hash = set_hash
         self.custom_calcs = self.controller.get_custom_crc_calcs()
         self.register_num =  len(self.custom_calcs)
-
+	self.width = width
         self.init()
         self.registers = []
         self.flag = None
@@ -64,8 +64,12 @@ class CMSController(object):
             if (self.registers[0][0] == 0): #choose error and mv sketch
                 self.registers.append(self.controller.register_read("reg_srcAddr_f1"))      #1 src ips
                 self.registers.append(self.controller.register_read("reg_dstAddr_f1"))      #2 dst ips
-                self.registers.append(self.controller.register_read("reg_error_sketch_f1")) #3 error sketch
+                self.registers.append(self.controller.register_read("reg_error_sketch1_row0")) 					#3 error sketch
+                self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch1_row1")   	#1 dst ips
+                self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch1_row2")
                 self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
+
+		print(self.registers[3])
 
                 #reset mv keys and counters
                 self.controller.register_reset("reg_srcAddr_f1")
@@ -74,8 +78,12 @@ class CMSController(object):
             else:
                 self.registers.append(self.controller.register_read("reg_srcAddr_f0"))      #1 src ips
                 self.registers.append(self.controller.register_read("reg_dstAddr_f0"))      #2 dst ips
-                self.registers.append(self.controller.register_read("reg_error_sketch_f0")) #3 error sketch
+                self.registers.append(self.controller.register_read("reg_error_sketch0_row0")) 					#3 error sketch
+                self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch0_row1")    	#1 dst ips
+                self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch0_row2")
                 self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
+
+		print(self.registers[3])
 
                 #reset mv keys and counters
                 self.controller.register_reset("reg_srcAddr_f0")
@@ -112,7 +120,7 @@ if __name__ == "__main__":
     parser.add_argument('--epoch', help="seconds in each epoch", type=int, required=False, default=1)
     args = parser.parse_args()
 
-    controller = CMSController(args.port,True) #True if we want to use custom polynomials
+    controller = CMSController(args.width,args.port,True) #True if we want to use custom polynomials
 
     epoch = -1
     while(True):
