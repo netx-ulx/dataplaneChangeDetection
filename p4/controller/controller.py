@@ -12,13 +12,13 @@ crc32_polinomials = [0x04C11DB7, 0xEDB88320, 0xDB710641, 0x82608EDB, 0x741B8CD7,
 
 class CMSController(object):
 
-    def __init__(self,port,set_hash):
+    def __init__(self,port,set_hash,width):
         self.max_int = 4294967296
         self.controller = SimpleSwitchAPI(port)
         self.set_hash = set_hash
         self.custom_calcs = self.controller.get_custom_crc_calcs()
         self.register_num =  len(self.custom_calcs)
-
+        self.width = width
         self.init()
         self.registers = []
         self.flag = None
@@ -58,29 +58,49 @@ class CMSController(object):
     
     def read_registers(self):
         self.registers = []
-        self.registers.append(self.controller.register_read("reg_sketch_flag"))             #0 flag
+        self.registers.append(self.controller.register_read("reg_epoch_bit"))             #0 flag
         if self.registers[0] != self.flag:
             self.flag = self.registers[0]
             if (self.registers[0][0] == 0): #choose error and mv sketch
-                self.registers.append(self.controller.register_read("reg_srcAddr_f1"))      #1 src ips
-                self.registers.append(self.controller.register_read("reg_dstAddr_f1"))      #2 dst ips
-                self.registers.append(self.controller.register_read("reg_error_sketch_f1")) #3 error sketch
-                self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
+                self.registers.append(self.controller.register_read("reg_flowsrc_row0")[self.width:2*self.width])                        #1 src ips
+                self.registers[1] = self.registers[1] + self.controller.register_read("reg_flowsrc_row1")[self.width:2*self.width]       #1 src ips
+                self.registers[1] = self.registers[1] + self.controller.register_read("reg_flowsrc_row2")[self.width:2*self.width]       #1 src ips
+                self.registers.append(self.controller.register_read("reg_flowdst_row0")[self.width:2*self.width])                        #2 dst ips
+                self.registers[2] = self.registers[2] + self.controller.register_read("reg_flowdst_row1")[self.width:2*self.width]       #1 dst ips
+                self.registers[2] = self.registers[2] + self.controller.register_read("reg_flowdst_row2")[self.width:2*self.width]       #1 dst ips
+                self.registers.append(self.controller.register_read("reg_error_sketch_f1")[self.width:2*self.width]) #3 error sketch
+                self.registers.append(self.controller.register_read("reg_packet_changed")[self.width:2*self.width])  #4 total num packets
 
                 #reset mv keys and counters
-                self.controller.register_reset("reg_srcAddr_f1")
-                self.controller.register_reset("reg_dstAddr_f1")
-                self.controller.register_reset("reg_sketch_count_f1")
+                self.controller.register_reset("reg_flowsrc_row0")
+                self.controller.register_reset("reg_flowsrc_row1")
+                self.controller.register_reset("reg_flowsrc_row2")
+                self.controller.register_reset("reg_flowdst_row0")
+                self.controller.register_reset("reg_flowdst_row1")
+                self.controller.register_reset("reg_flowdst_row2")
+                self.controller.register_reset("reg_flowKey_count_row0")
+                self.controller.register_reset("reg_flowKey_count_row1")
+                self.controller.register_reset("reg_flowKey_count_row2")
             else:
-                self.registers.append(self.controller.register_read("reg_srcAddr_f0"))      #1 src ips
-                self.registers.append(self.controller.register_read("reg_dstAddr_f0"))      #2 dst ips
-                self.registers.append(self.controller.register_read("reg_error_sketch_f0")) #3 error sketch
-                self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
+                self.registers.append(self.controller.register_read("reg_flowsrc_row0")[0:self.width])                        #1 src ips
+                self.registers[1] = self.registers[1] + self.controller.register_read("reg_flowsrc_row1")[0:self.width]       #1 src ips
+                self.registers[1] = self.registers[1] + self.controller.register_read("reg_flowsrc_row2")[0:self.width]       #1 src ips
+                self.registers.append(self.controller.register_read("reg_flowdst_row0")[0:self.width])                        #2 dst ips
+                self.registers[2] = self.registers[2] + self.controller.register_read("reg_flowdst_row1")[0:self.width]       #1 dst ips
+                self.registers[2] = self.registers[2] + self.controller.register_read("reg_flowdst_row2")[0:self.width]       #1 dst ips
+                self.registers.append(self.controller.register_read("reg_error_sketch_f1")[0:self.width]) #3 error sketch
+                self.registers.append(self.controller.register_read("reg_packet_changed")[0:self.width])  #4 total num packets
 
                 #reset mv keys and counters
-                self.controller.register_reset("reg_srcAddr_f0")
-                self.controller.register_reset("reg_dstAddr_f0")
-                self.controller.register_reset("reg_sketch_count_f0")   
+                self.controller.register_reset("reg_flowsrc_row0")
+                self.controller.register_reset("reg_flowsrc_row1")
+                self.controller.register_reset("reg_flowsrc_row2")
+                self.controller.register_reset("reg_flowdst_row0")
+                self.controller.register_reset("reg_flowdst_row1")
+                self.controller.register_reset("reg_flowdst_row2")
+                self.controller.register_reset("reg_flowKey_count_row0")
+                self.controller.register_reset("reg_flowKey_count_row1")
+                self.controller.register_reset("reg_flowKey_count_row2")  
         else:
             self.registers[0] = None
 
@@ -112,7 +132,7 @@ if __name__ == "__main__":
     parser.add_argument('--epoch', help="seconds in each epoch", type=int, required=False, default=1)
     args = parser.parse_args()
 
-    controller = CMSController(args.port,True) #True if we want to use custom polynomials
+    controller = CMSController(args.port,True,args.width) #True if we want to use custom polynomials
 
     epoch = -1
     while(True):

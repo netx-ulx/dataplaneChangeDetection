@@ -8,7 +8,7 @@ const bit<48> EPOCH_SIZE       		=  1000;// epoch size in # of packets
 const bit<48> EPOCH_SIZE       		=  1000000;// epoch size in us (1 sec)
 #endif
 
-#define KEY_SIZE 64   
+//#define KEY_SIZE 64   
 const bit<32> SKETCH_WIDTH			=  64;  // width of the sketch
 const bit<32> SKETCH_DEPTH			=  3;   // depth of the sketch
 const bit<32> DUPL_LEVEL			=  2;   // how many instances of the same sketch are stored in the same register array

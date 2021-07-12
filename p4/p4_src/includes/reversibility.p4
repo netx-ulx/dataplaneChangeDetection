@@ -21,14 +21,16 @@ control RevertRow0(inout metadata meta) {
 apply {
 
 	    //compare candidate flow key with current flow key
-		reg_flowKey_row0.read(meta.stored_flowKey, meta.hash0_value);
+		reg_flowsrc_row0.read(meta.stored_flowsrc, meta.hash0_value);
+		reg_flowdst_row0.read(meta.stored_flowdst, meta.hash0_value);
 		reg_flowKey_count_row0.read(meta.flowKey_count, meta.hash0_value);
 
-		if (meta.stored_flowKey != meta.current_flowKey ) { //if keys are different check counter
+		if ( meta.stored_flowsrc != meta.current_flowsrc || meta.stored_flowdst != meta.current_flowdst ) { //if keys are different check counter
 
 			if (meta.flowKey_count == 0) { 
 
-				reg_flowKey_row0.write(meta.hash0_value, meta.current_flowKey);
+				reg_flowsrc_row0.write(meta.hash0_value, meta.current_flowsrc);
+				reg_flowdst_row0.write(meta.hash0_value, meta.current_flowdst);
 				reg_flowKey_count_row0.write(meta.hash0_value, meta.flowKey_count + 1);
 
 			} else if (meta.flowKey_count > 0) { //if counter is not zero decrement counter by 1
@@ -49,14 +51,16 @@ control RevertRow1(inout metadata meta) {
 apply {
 
 	    //compare candidate flow key with current flow key
-		reg_flowKey_row1.read(meta.stored_flowKey, meta.hash1_value);
+		reg_flowsrc_row1.read(meta.stored_flowsrc, meta.hash0_value);
+		reg_flowdst_row1.read(meta.stored_flowdst, meta.hash0_value);
 		reg_flowKey_count_row1.read(meta.flowKey_count, meta.hash1_value);
 
-		if (meta.stored_flowKey != meta.current_flowKey ) { //if keys are different check counter
+		if ( meta.stored_flowsrc != meta.current_flowsrc || meta.stored_flowdst != meta.current_flowdst ) { //if keys are different check counter
 
 			if (meta.flowKey_count == 0) { 
 
-				reg_flowKey_row1.write(meta.hash1_value, meta.current_flowKey);
+				reg_flowsrc_row1.write(meta.hash0_value, meta.current_flowsrc);
+				reg_flowdst_row1.write(meta.hash0_value, meta.current_flowdst);
 				reg_flowKey_count_row1.write(meta.hash1_value, meta.flowKey_count + 1);
 
 			} else if (meta.flowKey_count > 0) { //if counter is not zero decrement counter by 1
@@ -77,14 +81,16 @@ control RevertRow2(inout metadata meta) {
 apply {
 
 	    //compare candidate flow key with current flow key
-		reg_flowKey_row2.read(meta.stored_flowKey, meta.hash2_value);
+		reg_flowsrc_row2.read(meta.stored_flowsrc, meta.hash0_value);
+		reg_flowdst_row2.read(meta.stored_flowdst, meta.hash0_value);
 		reg_flowKey_count_row2.read(meta.flowKey_count, meta.hash2_value);
 
-		if (meta.stored_flowKey != meta.current_flowKey ) { //if keys are different check counter
+		if ( meta.stored_flowsrc != meta.current_flowsrc || meta.stored_flowdst != meta.current_flowdst ) { //if keys are different check counter
 
 			if (meta.flowKey_count == 0) { 
 
-				reg_flowKey_row2.write(meta.hash2_value, meta.current_flowKey);
+				reg_flowsrc_row2.write(meta.hash0_value, meta.current_flowsrc);
+				reg_flowdst_row2.write(meta.hash0_value, meta.current_flowdst);
 				reg_flowKey_count_row2.write(meta.hash2_value, meta.flowKey_count + 1);
 
 			} else if (meta.flowKey_count > 0) { //if counter is not zero decrement counter by 1

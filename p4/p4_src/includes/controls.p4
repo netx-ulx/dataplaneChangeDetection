@@ -200,3 +200,24 @@ apply {
 
 	} // end of the apply block
 }
+
+void UpdateRow_Epoch1_Row0(int num, inout metadata meta) {
+	//update forecast
+	reg_forecast_sketch_row0.read(meta.forecast,meta.hash);
+	meta.new_forecast = 10 + meta.forecast; //sum with old value
+	reg_forecast_sketch_row0.write(meta.hash,meta.new_forecast); //update
+}
+
+void UpdateRow_Epoch1_Row1(int num, inout metadata meta) {
+	//update forecast
+	reg_forecast_sketch_row1.read(meta.forecast,meta.hash);
+	meta.new_forecast = 10 + meta.forecast; //sum with old value
+	reg_forecast_sketch_row1.write(meta.hash,meta.new_forecast); //update
+}
+
+void UpdateRow_Epoch1_Row2(int num, inout metadata meta) {
+	//update forecast
+	reg_forecast_sketch_row2.read(meta.forecast,meta.hash);
+	meta.new_forecast = 10 + meta.forecast; //sum with old value
+	reg_forecast_sketch_row2.write(meta.hash,meta.new_forecast); //update
+}

@@ -72,8 +72,10 @@ struct metadata {
 	int<32> new_err;
 	/* ------------------------ */
 	#ifdef REVERT
-    bit<64> current_flowKey;
-    bit<64> stored_flowKey;
+    bit<32> current_flowsrc;
+    bit<32> current_flowdst;
+    bit<32> stored_flowsrc;
+    bit<32> stored_flowdst;
     int<32> flowKey_count;
 	#endif
 	/* ------------------------ */

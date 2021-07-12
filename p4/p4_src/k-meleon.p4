@@ -47,6 +47,11 @@ control MyIngress(inout headers hdr,
 	UpdateRow1() update_row1;
 	UpdateRow2() update_row2;
 
+	UpdateRow_Epoch1_Row0() update_epoch1_row0;
+	UpdateRow_Epoch1_Row1() update_epoch1_row1;
+	UpdateRow_Epoch1_Row2() update_epoch1_row2;
+
+
 	#ifdef REVERT
 	RevertRow0() revert_row0;
 	RevertRow1() revert_row1;
@@ -195,11 +200,12 @@ apply {
 
 			// the following additional update of the data structures only happens once in the first epoch (EWMA for t=2)
 			if(meta.first_epoch_flag == 0) {
-				update_row0.apply(meta);
+				update_epoch1_row0.apply(meta);
 			}
 
 			#ifdef REVERT
-			meta.current_flowKey = hdr.ipv4.srcAddr++hdr.ipv4.dstAddr;
+			meta.current_flowsrc = hdr.ipv4.srcAddr;
+			meta.current_flowdst = hdr.ipv4.dstAddr;
 			revert_row0.apply(meta);
 			#endif
 
@@ -208,7 +214,7 @@ apply {
 
 			// the following additional update of the data structures only happens once in the first epoch (EWMA for t=2)
 			if(meta.first_epoch_flag == 0) {
-				update_row1.apply(meta);
+				update_epoch1_row1.apply(meta);
 			}
 
 			#ifdef REVERT
@@ -220,7 +226,7 @@ apply {
 
 			// the following additional update of the data structures only happens once in the first epoch (EWMA for t=2)
 			if(meta.first_epoch_flag == 0) {
-				update_row2.apply(meta);
+				update_epoch1_row2.apply(meta);
 			}
 
 			#ifdef REVERT

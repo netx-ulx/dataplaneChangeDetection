@@ -3,9 +3,13 @@
 //*--------------------------------------------------------------------------------------------------------------*//
 
 #ifdef REVERT
-register<bit<KEY_SIZE>>(SKETCH_WIDTH*DUPL_LEVEL) reg_flowKey_row0;   // Storing keys for the error sketch 
-register<bit<KEY_SIZE>>(SKETCH_WIDTH*DUPL_LEVEL) reg_flowKey_row1;        
-register<bit<KEY_SIZE>>(SKETCH_WIDTH*DUPL_LEVEL) reg_flowKey_row2;        
+register<bit<32>>(SKETCH_WIDTH*DUPL_LEVEL) reg_flowsrc_row0;   // Storing keys for the error sketch 
+register<bit<32>>(SKETCH_WIDTH*DUPL_LEVEL) reg_flowsrc_row1;        
+register<bit<32>>(SKETCH_WIDTH*DUPL_LEVEL) reg_flowsrc_row2; 
+
+register<bit<32>>(SKETCH_WIDTH*DUPL_LEVEL) reg_flowdst_row0;   // Storing keys for the error sketch 
+register<bit<32>>(SKETCH_WIDTH*DUPL_LEVEL) reg_flowdst_row1;        
+register<bit<32>>(SKETCH_WIDTH*DUPL_LEVEL) reg_flowdst_row2; 
 
 register<int<32>>(SKETCH_WIDTH*DUPL_LEVEL) reg_flowKey_count_row0;   // Storing counters for the error sketch keys
 register<int<32>>(SKETCH_WIDTH*DUPL_LEVEL) reg_flowKey_count_row1;
