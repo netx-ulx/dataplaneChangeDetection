@@ -204,26 +204,26 @@ apply {
 control UpdateRow_Epoch1_Row0(inout metadata meta) {
 	apply {
 	//update forecast
-	reg_forecast_sketch_row0.read(meta.forecast,meta.hash);
+	reg_forecast_sketch_row0.read(meta.forecast,meta.hash0_value);
 	meta.new_forecast = 10 + meta.forecast; //sum with old value
-	reg_forecast_sketch_row0.write(meta.hash,meta.new_forecast); //update
+	reg_forecast_sketch_row0.write(meta.hash0_value,meta.new_forecast); //update
 	}
 }
 
 control UpdateRow_Epoch1_Row1(inout metadata meta) {
 	apply {
 	//update forecast
-	reg_forecast_sketch_row1.read(meta.forecast,meta.hash);
+	reg_forecast_sketch_row1.read(meta.forecast,meta.hash1_value);
 	meta.new_forecast = 10 + meta.forecast; //sum with old value
-	reg_forecast_sketch_row1.write(meta.hash,meta.new_forecast); //update
+	reg_forecast_sketch_row1.write(meta.hash1_value,meta.new_forecast); //update
 	}
 }
 
 control UpdateRow_Epoch1_Row2(inout metadata meta) {
 	apply {
 	//update forecast
-	reg_forecast_sketch_row2.read(meta.forecast,meta.hash);
+	reg_forecast_sketch_row2.read(meta.forecast,meta.hash2_value);
 	meta.new_forecast = 10 + meta.forecast; //sum with old value
-	reg_forecast_sketch_row2.write(meta.hash,meta.new_forecast); //update
+	reg_forecast_sketch_row2.write(meta.hash2_value,meta.new_forecast); //update
 	}
 }
