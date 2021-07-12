@@ -71,7 +71,7 @@ class CMSController(object):
                 self.registers.append(self.controller.register_read("reg_error_sketch_row0")[self.width:2*self.width]) #3 error sketch
                 self.registers[2] = self.registers[2] + self.controller.register_read("reg_error_sketch_row1")[self.width:2*self.width]       #1 dst ips
                 self.registers[2] = self.registers[2] + self.controller.register_read("reg_error_sketch_row2")[self.width:2*self.width] 
-                self.registers.append(self.controller.register_read("reg_packet_changed")[self.width:2*self.width])  #4 total num packets
+                #self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
 
                 #reset mv keys and counters
                 self.controller.register_reset("reg_flowsrc_row0")
@@ -93,7 +93,7 @@ class CMSController(object):
                 self.registers.append(self.controller.register_read("reg_error_sketch_row0")[0:self.width]) #3 error sketch
                 self.registers[2] = self.registers[2] + self.controller.register_read("reg_error_sketch_row1")[0:self.width]       #1 dst ips
                 self.registers[2] = self.registers[2] + self.controller.register_read("reg_error_sketch_row2")[0:self.width]
-                self.registers.append(self.controller.register_read("reg_packet_changed")[0:self.width])  #4 total num packets
+                #self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
 
                 #reset mv keys and counters
                 self.controller.register_reset("reg_flowsrc_row0")
@@ -123,7 +123,7 @@ class CMSController(object):
         width = len(self.registers[3])/depth
         for i in range(0,depth):
             splited.append(self.registers[3][i*width:((i+1)*width)])
-        return splited, self.registers[1], self.registers[2], self.registers[4]
+        return splited, self.registers[1], self.registers[2]
 
 if __name__ == "__main__":
     import argparse
@@ -148,7 +148,7 @@ if __name__ == "__main__":
             time.sleep(args.epoch)
             continue
 
-        error, raw_src, raw_dst, num_packets = controller.detect_change(args.depth)
+        error, raw_src, raw_dst = controller.detect_change(args.depth)
         error_sketch = KAry_Sketch(len(error),len(error[0]))
         error_sketch.sketch = error
 
@@ -208,7 +208,7 @@ if __name__ == "__main__":
 
         #write changes to file            
         with open("controller.out",'a') as f:
-            f.write("Epoch: " + str(epoch) + "       " + "Threshold: " + str(TA) + "       " + "Num Packets: " + str(num_packets[0]) +'\n')
+            f.write("Epoch: " + str(epoch) + "       " + "Threshold: " + str(TA) + "       " + '\n')
             f.write("Change: " + str(changes) + '\n')
             f.write("Number of Flows: " + str(len(all_keys)) + '\n')
         epoch = epoch + 1
