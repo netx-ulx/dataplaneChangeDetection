@@ -395,19 +395,19 @@ control MyIngress(inout headers hdr,
 				} else {
 					// first row
 					meta.hash = meta.hash0;
-					KARY_UpdateRow0(SKETCH_WIDTH,meta);
+					KARY_UpdateRow0(1,meta);
 					MV_UpdateRow(meta,hdr);
 
 					// second row
 					meta.offset = SKETCH_WIDTH;
 					meta.hash = meta.hash1 + meta.offset;
-					KARY_UpdateRow1(SKETCH_WIDTH,meta);
+					KARY_UpdateRow1(1,meta);
 					MV_UpdateRow(meta,hdr);
 
 					// third row
 					meta.offset = SKETCH_WIDTH + SKETCH_WIDTH;
 					meta.hash = meta.hash2 + meta.offset;
-					KARY_UpdateRow2(SKETCH_WIDTH,meta);
+					KARY_UpdateRow2(1,meta);
 					MV_UpdateRow(meta,hdr);
 				}
 
