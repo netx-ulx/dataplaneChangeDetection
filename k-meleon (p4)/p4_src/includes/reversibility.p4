@@ -4,7 +4,7 @@
 control RevertRow(inout metadata meta, inout headers hdr) {
 	apply{
         //compare candidate flow key with current flow key
-        if (meta.flag == 0) {
+        if (meta.epoch_bit == 0) {
             reg_srcAddr_f0.read(meta.tempsrc, meta.hash);
             reg_dstAddr_f0.read(meta.tempdst, meta.hash);
             reg_sketch_count_f0.read(meta.tempcount, meta.hash);

@@ -54,16 +54,16 @@ struct metadata {
     int<32> tempcount;
     int<32> tempsum;
     bit<1> repass;
-    bit<1> flag;
+    bit<1> epoch_bit;
 
 	bit<1> ctrl;
-    bit<1> first;
+    bit<1> first_epoch_flag;
 	bit<32> counter;
 	bit<32> offset;
 	int<32> obs;
 	int<32> err;
     int<32> num_packets;
-	bit<32> epoch; // epoch in # of packets
+	bit<32> epoch_value; // epoch in # of packets
 	int<32> forecast;
 	int<32> aux_forecast;
 	int<32> new_forecast;

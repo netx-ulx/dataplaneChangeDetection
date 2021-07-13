@@ -99,36 +99,36 @@ control MyIngress(inout headers hdr,
 			/********************************************************/
 			/***************** EPOCH VERIFICATION *******************/
 
-			reg_epoch.read(meta.epoch,0);
-			reg_sketch_flag.read(meta.flag,0);
-			reg_first.read(meta.first,0);
+			reg_epoch_value.read(meta.epoch_value,0);
+			reg_epoch_bit.read(meta.epoch_bit,0);
+			reg_first_epoch_flag.read(meta.first_epoch_flag,0);
 			//check if new packet is inside current epoch or in the next one
-			if (meta.epoch >= EPOCH_SIZE) { 
-				reg_epoch.write(0,1); //reset packet counter
-				meta.first = 1;
-				reg_first.write(0,meta.first);
+			if (meta.epoch_value >= EPOCH_SIZE) { 
+				reg_epoch_value.write(0,1); //reset packet counter
+				meta.first_epoch_flag = 1;
+				reg_first_epoch_flag.write(0,meta.first_epoch_flag);
 				// start new epoch by changing sketch flag and resetting other counters
-				if (meta.flag == 0) {
-					meta.flag = 1;
-					reg_sketch_flag.write(0,meta.flag);
+				if (meta.epoch_bit == 0) {
+					meta.epoch_bit = 1;
+					reg_epoch_bit.write(0,meta.epoch_bit);
 				} else {
-					meta.flag = 0;
-					reg_sketch_flag.write(0,meta.flag);
+					meta.epoch_bit = 0;
+					reg_epoch_bit.write(0,meta.epoch_bit);
 				}
-				reg_extra_op_counter.write(0,0);
-				reg_extra_op_counter.write(1,0);
-				reg_extra_op_counter.write(2,0);
+				reg_extraOp_counter.write(0,0);
+				reg_extraOp_counter.write(1,0);
+				reg_extraOp_counter.write(2,0);
 				reg_packet_changed.write(0,meta.num_packets);
 			} else {
 				// increment number of packets in this epoch
-				meta.epoch = meta.epoch + 1;
-				reg_epoch.write(0,meta.epoch);
+				meta.epoch_value = meta.epoch_value + 1;
+				reg_epoch_value.write(0,meta.epoch_value);
 			}
 
 			/********************************************************/
 			/******************* UPDATE "CYCLE" *********************/
 
-			if(meta.first == 0) {
+			if(meta.first_epoch_flag == 0) {
 				// first row
 				update_epoch1_row0.apply(meta);
 
