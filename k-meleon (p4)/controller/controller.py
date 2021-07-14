@@ -58,7 +58,7 @@ class CMSController(object):
     
     def read_registers(self):
         self.registers = []
-        self.registers.append(self.controller.register_read("reg_sketch_flag"))             #0 flag
+        self.registers.append(self.controller.register_read("reg_epoch_bit"))             #0 flag
         if self.registers[0] != self.flag:
             self.flag = self.registers[0]
             if (self.registers[0][0] == 0): #choose error and mv sketch
