@@ -63,7 +63,7 @@ struct metadata {
 	int<32> obs;
 	int<32> err;
     int<32> num_packets;
-	bit<32> epoch_value; // epoch in # of packets
+	bit<48> epoch_value; // epoch in # of packets or bmv2 ingress-timestamp (<48>)
 	int<32> forecast;
 	int<32> aux_forecast;
 	int<32> new_forecast;

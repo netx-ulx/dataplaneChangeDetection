@@ -5,6 +5,7 @@
 #include "includes/constants.p4"
 #include "includes/types.p4"
 #include "includes/headers.p4"
+#include "includes/macros.p4"
 #include "includes/registers.p4"
 
 
@@ -99,15 +100,26 @@ control MyIngress(inout headers hdr,
 			/********************************************************/
 			/***************** EPOCH VERIFICATION *******************/
 
+
 			reg_epoch_value.read(meta.epoch_value,0);
-			reg_epoch_bit.read(meta.epoch_bit,0);
-			reg_first_epoch_flag.read(meta.first_epoch_flag,0);
-			//check if new packet is inside current epoch or in the next one
-			if (meta.epoch_value >= EPOCH_SIZE) { 
-				reg_epoch_value.write(0,1); //reset packet counter
-				meta.first_epoch_flag = 1;
-				reg_first_epoch_flag.write(0,meta.first_epoch_flag);
-				// start new epoch by changing sketch flag and resetting other counters
+
+			#ifdef EPOCH_PKT /* epoch calculated with the number of packets processed */
+
+			if ( meta.epoch_value >= EPOCH_SIZE) { 
+
+				reg_epoch_value.write(0,1); //reset packet counter for the current epoch
+
+			#elif EPOCH_TS /* epoch calculated as time interval */
+
+			if ( (standard_metadata.ingress_global_timestamp - meta.epoch_value) >= EPOCH_SIZE) { 
+
+				reg_epoch_value.write(0, standard_metadata.ingress_global_timestamp);
+
+			#endif /* EPOCH TS Or PKT */
+
+				// start new epoch by flipping the epoch bit
+				reg_epoch_bit.read(meta.epoch_bit,0);
+
 				if (meta.epoch_bit == 0) {
 					meta.epoch_bit = 1;
 					reg_epoch_bit.write(0,meta.epoch_bit);
@@ -115,14 +127,37 @@ control MyIngress(inout headers hdr,
 					meta.epoch_bit = 0;
 					reg_epoch_bit.write(0,meta.epoch_bit);
 				}
+
+				# flag to signal that epoch has changed
+				meta.epoch_changed_flag = 1;
+			}
+
+			// we have 1-bit register to apply a different forecast formula (EWMA for t=2) to the sketch structures only in the 1st epoch
+			// we use a somehow counterintuitive choice of a value of 0 meaning this is the first epoch and a value of 1 otherwise
+ 			// since a register cannot be initialized to any value in the P4 program itself
+			reg_first_epoch_flag.read(meta.first_epoch_flag,0);
+
+			if (meta.epoch_changed_flag == 1) {
+				
+				meta.first_epoch_flag = 1;
+				reg_first_epoch_flag.write(0,meta.first_epoch_flag); // from now on, this register will always hold the value 1 
+
+				// reset the extraOp counters
 				reg_extraOp_counter.write(0,0);
 				reg_extraOp_counter.write(1,0);
 				reg_extraOp_counter.write(2,0);
 				reg_packet_changed.write(0,meta.num_packets);
-			} else {
-				// increment number of packets in this epoch
-				meta.epoch_value = meta.epoch_value + 1;
-				reg_epoch_value.write(0,meta.epoch_value);
+			}
+			else {
+
+				reg_epoch_bit.read(meta.epoch_bit,0);
+
+				#ifdef EPOCH_PKT /* epoch calculated with the number of packets processed */
+	
+				// increment the number of packets in the current epoch
+				reg_epoch_value.write(0,meta.epoch_value + 1);
+
+				#endif
 			}
 
 			/********************************************************/
