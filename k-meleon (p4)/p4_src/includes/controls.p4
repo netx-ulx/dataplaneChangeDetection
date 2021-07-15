@@ -12,7 +12,7 @@ control UpdateRow0(inout metadata meta) {
             reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);
 
             //update error
-            meta.new_err = 10 - meta.forecast;
+            meta.new_err = SKETCH_UPDATE - meta.forecast;
             if (meta.epoch_bit == 0) {
                 reg_error_sketch0_row0.write(meta.hash0,meta.new_err);
             } else {
@@ -20,7 +20,7 @@ control UpdateRow0(inout metadata meta) {
             }
 
             //update forecast
-            meta.obs = 10 >> 1; //division by 2
+            meta.obs = SKETCH_UPDATE >> 1; //division by 2
             meta.aux_forecast = meta.forecast >> 1; //division by 2
             meta.new_forecast = meta.obs + meta.aux_forecast; //sum of both
 
@@ -29,16 +29,16 @@ control UpdateRow0(inout metadata meta) {
             //update error
             if (meta.epoch_bit == 0) {
                 reg_error_sketch0_row0.read(meta.err,meta.hash0);
-                meta.new_err = meta.err + 10;
+                meta.new_err = meta.err + SKETCH_UPDATE;
                 reg_error_sketch0_row0.write(meta.hash0,meta.new_err);
             } else {
                 reg_error_sketch1_row0.read(meta.err,meta.hash0);
-                meta.new_err = meta.err + 10;
+                meta.new_err = meta.err + SKETCH_UPDATE;
                 reg_error_sketch1_row0.write(meta.hash0,meta.new_err);
             }
             //update forecast
             reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);
-            meta.obs = 10 >> 1; //division by 2
+            meta.obs = SKETCH_UPDATE >> 1; //division by 2
             meta.new_forecast = meta.obs + meta.forecast; //sum with old value
             reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast); //update
 
@@ -77,7 +77,7 @@ control UpdateRow1(inout metadata meta) {
             reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);
             
             //update error
-            meta.new_err = 10 - meta.forecast;
+            meta.new_err = SKETCH_UPDATE - meta.forecast;
             if (meta.epoch_bit == 0) {
                 reg_error_sketch0_row1.write(meta.hash1,meta.new_err);
             } else {
@@ -85,7 +85,7 @@ control UpdateRow1(inout metadata meta) {
             }
 
             //update forecast
-            meta.obs = 10 >> 1; //division by 2
+            meta.obs = SKETCH_UPDATE >> 1; //division by 2
             meta.aux_forecast = meta.forecast >> 1; //division by 2
             meta.new_forecast = meta.obs + meta.aux_forecast; //sum of both
 
@@ -95,17 +95,17 @@ control UpdateRow1(inout metadata meta) {
             
             if (meta.epoch_bit == 0) {
                 reg_error_sketch0_row1.read(meta.err,meta.hash1);
-                meta.new_err = meta.err + 10;
+                meta.new_err = meta.err + SKETCH_UPDATE;
                 reg_error_sketch0_row1.write(meta.hash1,meta.new_err);
             } else {
                 reg_error_sketch1_row1.read(meta.err,meta.hash1);
-                meta.new_err = meta.err + 10;
+                meta.new_err = meta.err + SKETCH_UPDATE;
                 reg_error_sketch1_row1.write(meta.hash1,meta.new_err);
             }
 
             //update forecast
             reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);
-            meta.obs = 10 >> 1; //division by 2
+            meta.obs = SKETCH_UPDATE >> 1; //division by 2
             meta.new_forecast = meta.obs + meta.forecast; //sum with old value
             reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast); //update
 
@@ -145,7 +145,7 @@ control UpdateRow2(inout metadata meta) {
             reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);
             
             //update error
-            meta.new_err = 10 - meta.forecast;
+            meta.new_err = SKETCH_UPDATE - meta.forecast;
             if (meta.epoch_bit == 0) {
                 reg_error_sketch0_row2.write(meta.hash2,meta.new_err);
             } else {
@@ -153,7 +153,7 @@ control UpdateRow2(inout metadata meta) {
             }
 
             //update forecast
-            meta.obs = 10 >> 1; //division by 2
+            meta.obs = SKETCH_UPDATE >> 1; //division by 2
             meta.aux_forecast = meta.forecast >> 1; //division by 2
             meta.new_forecast = meta.obs + meta.aux_forecast; //sum of both
 
@@ -163,17 +163,17 @@ control UpdateRow2(inout metadata meta) {
             
             if (meta.epoch_bit == 0) {
                 reg_error_sketch0_row2.read(meta.err,meta.hash2);
-                meta.new_err = meta.err + 10;
+                meta.new_err = meta.err + SKETCH_UPDATE;
                 reg_error_sketch0_row2.write(meta.hash2,meta.new_err);
             } else {
                 reg_error_sketch1_row2.read(meta.err,meta.hash2);
-                meta.new_err = meta.err + 10;
+                meta.new_err = meta.err + SKETCH_UPDATE;
                 reg_error_sketch1_row2.write(meta.hash2,meta.new_err);
             }
 
             //update forecast
             reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);
-            meta.obs = 10 >> 1; //division by 2
+            meta.obs = SKETCH_UPDATE >> 1; //division by 2
             meta.new_forecast = meta.obs + meta.forecast; //sum with old value
             reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast); //update
 
@@ -208,7 +208,7 @@ control UpdateEpoch1Row0(inout metadata meta) {
     apply{
         //update forecast
         reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);
-        meta.new_forecast = 10 + meta.forecast; //sum with old value
+        meta.new_forecast = SKETCH_UPDATE + meta.forecast; //sum with old value
         reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast); //update
     }
 }
@@ -217,7 +217,7 @@ control UpdateEpoch1Row1(inout metadata meta) {
     apply{
         //update forecast
         reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);
-        meta.new_forecast = 10 + meta.forecast; //sum with old value
+        meta.new_forecast = SKETCH_UPDATE + meta.forecast; //sum with old value
         reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast); //update
     }
 }
@@ -226,7 +226,7 @@ control UpdateEpoch1Row2(inout metadata meta) {
     apply{
         //update forecast
         reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);
-        meta.new_forecast = 10 + meta.forecast; //sum with old value
+        meta.new_forecast = SKETCH_UPDATE + meta.forecast; //sum with old value
         reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast); //update
     }
 }
