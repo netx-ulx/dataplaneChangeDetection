@@ -58,6 +58,7 @@ struct metadata {
 
 	bit<1> ctrl;
     bit<1> first_epoch_flag;
+    bit<1> epoch_changed_flag;
 	bit<32> counter;
 	bit<32> offset;
 	int<32> obs;

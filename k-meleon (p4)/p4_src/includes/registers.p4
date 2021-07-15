@@ -37,7 +37,7 @@ register<bit<1>>(SKETCH_WIDTH)  reg_controlFlag_sketch_row2;
 //*--------------------------------------------------------------------------------------------------------------*//
 
 register<bit<1>>(1)             reg_first_epoch_flag;                  // 1 bit flag for forecast sketch selection
-register<bit<32>>(1)            reg_epoch_value;                  // epoch is number of packets
+register<bit<48>>(1)            reg_epoch_value;                  // epoch is number of packets
 register<bit<32>>(SKETCH_DEPTH) reg_extraOp_counter;       // counter for extra operation
 register<int<32>>(1)            reg_total_num_packets;      // total_num_packets
 register<int<32>>(1)            reg_packet_changed;         // total_num_packets
