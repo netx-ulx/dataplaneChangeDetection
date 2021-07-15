@@ -4,64 +4,68 @@
 
 control UpdateRow0(inout metadata meta) {
 	apply {
-        //SKETCH + FORECASTING MODULE
+        // SKETCH + FORECASTING MODULE
         reg_controlFlag_sketch_row0.read(meta.ctrl,meta.hash0); 
-        if (meta.ctrl != meta.epoch_bit) { //If equals, copy forecast_sketch
-            reg_controlFlag_sketch_row0.write(meta.hash0,meta.epoch_bit);
+        if (meta.ctrl != meta.epoch_bit) { // If equals, copy forecast_sketch
+            reg_controlFlag_sketch_row0.write(meta.hash0,meta.epoch_bit);   // Flip  control  flag
             
-            reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);
+            reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);    // Sf(t)
 
-            //update error
-            meta.new_err = SKETCH_UPDATE - meta.forecast;
+            // update error
+            meta.new_err = SKETCH_UPDATE - meta.forecast;               // S’o(t) - Sf(t)
             if (meta.epoch_bit == 0) {
-                reg_error_sketch0_row0.write(meta.hash0,meta.new_err);
+                reg_error_sketch0_row0.write(meta.hash0,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
             } else {
-                reg_error_sketch1_row0.write(meta.hash0,meta.new_err);
+                reg_error_sketch1_row0.write(meta.hash0,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
             }
 
-            //update forecast
-            meta.obs = SKETCH_UPDATE >> 1; //division by 2
-            meta.aux_forecast = meta.forecast >> 1; //division by 2
-            meta.new_forecast = meta.obs + meta.aux_forecast; //sum of both
+            // update forecast
+            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
+            meta.new_forecast = meta.obs + meta.aux_forecast;           // alpha*S’o(t) + (1-alpha)*Sf(t)
 
-            reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast); //update
+            // Sf(t+1) = alpha*S’o(t) + (1-alpha)*Sf(t)
+            reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast); 
         } else { //else, only update with observed
-            //update error
+            // update error
             if (meta.epoch_bit == 0) {
-                reg_error_sketch0_row0.read(meta.err,meta.hash0);
-                meta.new_err = meta.err + SKETCH_UPDATE;
-                reg_error_sketch0_row0.write(meta.hash0,meta.new_err);
+                reg_error_sketch0_row0.read(meta.err,meta.hash0);       // Se(t)
+                meta.new_err = meta.err + SKETCH_UPDATE;                // Se(t) + S’o(t)
+                reg_error_sketch0_row0.write(meta.hash0,meta.new_err);  // Se(t) = Se(t) + S’o(t)
             } else {
-                reg_error_sketch1_row0.read(meta.err,meta.hash0);
-                meta.new_err = meta.err + SKETCH_UPDATE;
-                reg_error_sketch1_row0.write(meta.hash0,meta.new_err);
+                reg_error_sketch1_row0.read(meta.err,meta.hash0);       // Se(t)
+                meta.new_err = meta.err + SKETCH_UPDATE;                // Se(t) + S’o(t)
+                reg_error_sketch1_row0.write(meta.hash0,meta.new_err);  // Se(t) = Se(t) + S’o(t)
             }
-            //update forecast
-            reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);
-            meta.obs = SKETCH_UPDATE >> 1; //division by 2
-            meta.new_forecast = meta.obs + meta.forecast; //sum with old value
-            reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast); //update
+            // update forecast
+            reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);    // Sf(t+1)
+            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            meta.new_forecast = meta.obs + meta.forecast;               // Sf(t+1) + alpha*S’o(t)
 
-            //compute one extra op
+            // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
+            reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast);
+
+            // compute one extra op
             reg_extraOp_counter.read(meta.counter,0);
             if (meta.counter < SKETCH_WIDTH) {
-                reg_controlFlag_sketch_row0.read(meta.ctrl,meta.counter); 
-                if (meta.ctrl != meta.epoch_bit) { //If diff, copy forecast_sketch
-                    reg_controlFlag_sketch_row0.write(meta.counter,meta.epoch_bit);
-                    reg_forecast_sketch_row0.read(meta.forecast,meta.counter);
-
-                    //update error
-                    meta.new_err_op = -meta.forecast; //negative
-                    if (meta.epoch_bit == 0) {
-                        reg_error_sketch0_row0.write(meta.counter,meta.new_err_op);
-                    } else {
-                        reg_error_sketch1_row0.write(meta.counter,meta.new_err_op);
-                    }
-                    //update forecast
-                    meta.new_forecast = meta.forecast >> 1; //division by 2
-                    reg_forecast_sketch_row0.write(meta.counter,meta.new_forecast);
-                }
                 reg_extraOp_counter.write(0,meta.counter+1);
+                reg_controlFlag_sketch_row0.read(meta.ctrl,meta.counter);               // Sc(t)
+                if (meta.ctrl != meta.epoch_bit) { // If diff, copy forecast_sketch
+                    reg_controlFlag_sketch_row0.write(meta.counter,meta.epoch_bit);     // Sc(t) = !Sc(t)
+                    reg_forecast_sketch_row0.read(meta.forecast,meta.counter);          // Sf(t) 
+
+                    // update error
+                    meta.new_err_op = -meta.forecast;                                   // -Sf(t)
+                    if (meta.epoch_bit == 0) {
+                        reg_error_sketch0_row0.write(meta.counter,meta.new_err_op);     // Se(t) = -Sf(t)
+                    } else {
+                        reg_error_sketch1_row0.write(meta.counter,meta.new_err_op);     // Se(t) = -Sf(t)
+                    }
+
+                    // update forecast
+                    meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
+                    reg_forecast_sketch_row0.write(meta.counter,meta.new_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
+                }
             }
         }
     }
@@ -69,67 +73,69 @@ control UpdateRow0(inout metadata meta) {
 
 control UpdateRow1(inout metadata meta) {
 	apply{
-        //SKETCH + FORECASTING MODULE
+        // SKETCH + FORECASTING MODULE
         reg_controlFlag_sketch_row1.read(meta.ctrl,meta.hash1); 
-        if (meta.ctrl != meta.epoch_bit) { //If equals, copy forecast_sketch
-            reg_controlFlag_sketch_row1.write(meta.hash1,meta.epoch_bit);
+        if (meta.ctrl != meta.epoch_bit) {  // If equals, copy forecast_sketch
+            reg_controlFlag_sketch_row1.write(meta.hash1,meta.epoch_bit);   //  Flip  control  flag
             
-            reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);
+            reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);    // Sf(t)
             
-            //update error
-            meta.new_err = SKETCH_UPDATE - meta.forecast;
+            // update error
+            meta.new_err = SKETCH_UPDATE - meta.forecast;               // S’o(t) - Sf(t)
             if (meta.epoch_bit == 0) {
-                reg_error_sketch0_row1.write(meta.hash1,meta.new_err);
+                reg_error_sketch0_row1.write(meta.hash1,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
             } else {
-                reg_error_sketch1_row1.write(meta.hash1,meta.new_err);
+                reg_error_sketch1_row1.write(meta.hash1,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
             }
 
-            //update forecast
-            meta.obs = SKETCH_UPDATE >> 1; //division by 2
-            meta.aux_forecast = meta.forecast >> 1; //division by 2
-            meta.new_forecast = meta.obs + meta.aux_forecast; //sum of both
+            // update forecast
+            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
+            meta.new_forecast = meta.obs + meta.aux_forecast;           // alpha*S’o(t) + (1-alpha)*Sf(t)
 
-            reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast); //update
-        } else { //else, only update with observed
-            //update error
-            
+            // Sf(t+1) = alpha*S’o(t) + (1-alpha)*Sf(t)
+            reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast);
+        } else {    // else, only update with observed
+            // update error
             if (meta.epoch_bit == 0) {
-                reg_error_sketch0_row1.read(meta.err,meta.hash1);
-                meta.new_err = meta.err + SKETCH_UPDATE;
-                reg_error_sketch0_row1.write(meta.hash1,meta.new_err);
+                reg_error_sketch0_row1.read(meta.err,meta.hash1);       // Se(t)
+                meta.new_err = meta.err + SKETCH_UPDATE;                // Se(t) + S’o(t)
+                reg_error_sketch0_row1.write(meta.hash1,meta.new_err);  // Se(t) = Se(t) + S’o(t)
             } else {
-                reg_error_sketch1_row1.read(meta.err,meta.hash1);
-                meta.new_err = meta.err + SKETCH_UPDATE;
-                reg_error_sketch1_row1.write(meta.hash1,meta.new_err);
+                reg_error_sketch1_row1.read(meta.err,meta.hash1);       // Se(t)
+                meta.new_err = meta.err + SKETCH_UPDATE;                // Se(t) + S’o(t)
+                reg_error_sketch1_row1.write(meta.hash1,meta.new_err);  // Se(t) = Se(t) + S’o(t)
             }
 
-            //update forecast
-            reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);
-            meta.obs = SKETCH_UPDATE >> 1; //division by 2
-            meta.new_forecast = meta.obs + meta.forecast; //sum with old value
-            reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast); //update
+            // update forecast
+            reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);    // Sf(t+1)
+            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            meta.new_forecast = meta.obs + meta.forecast;               // Sf(t+1) + alpha*S’o(t)
+            
+            // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
+            reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast); 
 
-            //compute one extra op
+            // compute one extra op
             reg_extraOp_counter.read(meta.counter,1);
             if (meta.counter < SKETCH_WIDTH) {
-                reg_controlFlag_sketch_row1.read(meta.ctrl,meta.counter); 
-                if (meta.ctrl != meta.epoch_bit) { //If diff, copy forecast_sketch
-                    reg_controlFlag_sketch_row1.write(meta.counter,meta.epoch_bit);
-                    reg_forecast_sketch_row1.read(meta.forecast,meta.counter);
-
-                    //update error
-                    meta.new_err_op = -meta.forecast; //negative
-                    if (meta.epoch_bit == 0) {
-                        reg_error_sketch0_row1.write(meta.counter,meta.new_err_op);
-                    } else {
-                        reg_error_sketch1_row1.write(meta.counter,meta.new_err_op);
-                    }
-                    
-                    //update forecast
-                    meta.new_forecast = meta.forecast >> 1; //division by 2
-                    reg_forecast_sketch_row1.write(meta.counter,meta.new_forecast);
-                }
                 reg_extraOp_counter.write(1,meta.counter+1);
+                reg_controlFlag_sketch_row1.read(meta.ctrl,meta.counter);               // Sc(t)
+                if (meta.ctrl != meta.epoch_bit) { // If diff, copy forecast_sketch
+                    reg_controlFlag_sketch_row1.write(meta.counter,meta.epoch_bit);     // Sc(t) = !Sc(t)
+                    reg_forecast_sketch_row1.read(meta.forecast,meta.counter);          // Sf(t) 
+
+                    // update error
+                    meta.new_err_op = -meta.forecast;                                   // -Sf(t)
+                    if (meta.epoch_bit == 0) {
+                        reg_error_sketch0_row1.write(meta.counter,meta.new_err_op);     // Se(t) = -Sf(t)
+                    } else {
+                        reg_error_sketch1_row1.write(meta.counter,meta.new_err_op);     // Se(t) = -Sf(t)
+                    }
+
+                    // update forecast
+                    meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
+                    reg_forecast_sketch_row1.write(meta.counter,meta.new_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
+                }
             }
         }
     }
@@ -137,67 +143,69 @@ control UpdateRow1(inout metadata meta) {
 
 control UpdateRow2(inout metadata meta) {
 	apply{
-        //SKETCH + FORECASTING MODULE
+        // SKETCH + FORECASTING MODULE
         reg_controlFlag_sketch_row2.read(meta.ctrl,meta.hash2); 
-        if (meta.ctrl != meta.epoch_bit) { //If equals, copy forecast_sketch
-            reg_controlFlag_sketch_row2.write(meta.hash2,meta.epoch_bit);
+        if (meta.ctrl != meta.epoch_bit) {  // If equals, copy forecast_sketch
+            reg_controlFlag_sketch_row2.write(meta.hash2,meta.epoch_bit);   //  Flip  control  flag
             
-            reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);
+            reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);    // Sf(t)
             
-            //update error
-            meta.new_err = SKETCH_UPDATE - meta.forecast;
+            // update error
+            meta.new_err = SKETCH_UPDATE - meta.forecast;               // S’o(t) - Sf(t)
             if (meta.epoch_bit == 0) {
-                reg_error_sketch0_row2.write(meta.hash2,meta.new_err);
+                reg_error_sketch0_row2.write(meta.hash2,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
             } else {
-                reg_error_sketch1_row2.write(meta.hash2,meta.new_err);
+                reg_error_sketch1_row2.write(meta.hash2,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
             }
 
-            //update forecast
-            meta.obs = SKETCH_UPDATE >> 1; //division by 2
-            meta.aux_forecast = meta.forecast >> 1; //division by 2
-            meta.new_forecast = meta.obs + meta.aux_forecast; //sum of both
+            // update forecast
+            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
+            meta.new_forecast = meta.obs + meta.aux_forecast;           // alpha*S’o(t) + (1-alpha)*Sf(t)
 
-            reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast); //update
-        } else { //else, only update with observed
-            //update error
-            
+            // Sf(t+1) = alpha*S’o(t) + (1-alpha)*Sf(t)
+            reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast);
+        } else {    // else, only update with observed
+            // update error
             if (meta.epoch_bit == 0) {
-                reg_error_sketch0_row2.read(meta.err,meta.hash2);
-                meta.new_err = meta.err + SKETCH_UPDATE;
-                reg_error_sketch0_row2.write(meta.hash2,meta.new_err);
+                reg_error_sketch0_row2.read(meta.err,meta.hash2);       // Se(t)
+                meta.new_err = meta.err + SKETCH_UPDATE;                // Se(t) + S’o(t)
+                reg_error_sketch0_row2.write(meta.hash2,meta.new_err);  // Se(t) = Se(t) + S’o(t)
             } else {
-                reg_error_sketch1_row2.read(meta.err,meta.hash2);
-                meta.new_err = meta.err + SKETCH_UPDATE;
-                reg_error_sketch1_row2.write(meta.hash2,meta.new_err);
+                reg_error_sketch1_row2.read(meta.err,meta.hash2);       // Se(t)
+                meta.new_err = meta.err + SKETCH_UPDATE;                // Se(t) + S’o(t)
+                reg_error_sketch1_row2.write(meta.hash2,meta.new_err);  // Se(t) = Se(t) + S’o(t)
             }
 
-            //update forecast
-            reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);
-            meta.obs = SKETCH_UPDATE >> 1; //division by 2
-            meta.new_forecast = meta.obs + meta.forecast; //sum with old value
-            reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast); //update
+            // update forecast
+            reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);    // Sf(t+1)
+            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            meta.new_forecast = meta.obs + meta.forecast;               // Sf(t+1) + alpha*S’o(t)
+            
+            // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
+            reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast); 
 
-            //compute one extra op
+            // compute one extra op
             reg_extraOp_counter.read(meta.counter,2);
             if (meta.counter < SKETCH_WIDTH) {
-                reg_controlFlag_sketch_row2.read(meta.ctrl,meta.counter); 
-                if (meta.ctrl != meta.epoch_bit) { //If diff, copy forecast_sketch
-                    reg_controlFlag_sketch_row2.write(meta.counter,meta.epoch_bit);
-                    reg_forecast_sketch_row2.read(meta.forecast,meta.counter);
-
-                    //update error
-                    meta.new_err_op = -meta.forecast; //negative
-                    if (meta.epoch_bit == 0) {
-                        reg_error_sketch0_row2.write(meta.counter,meta.new_err_op);
-                    } else {
-                        reg_error_sketch1_row2.write(meta.counter,meta.new_err_op);
-                    }
-                    
-                    //update forecast
-                    meta.new_forecast = meta.forecast >> 1; //division by 2
-                    reg_forecast_sketch_row2.write(meta.counter,meta.new_forecast);
-                }
                 reg_extraOp_counter.write(2,meta.counter+1);
+                reg_controlFlag_sketch_row2.read(meta.ctrl,meta.counter);               // Sc(t)
+                if (meta.ctrl != meta.epoch_bit) { // If diff, copy forecast_sketch
+                    reg_controlFlag_sketch_row2.write(meta.counter,meta.epoch_bit);     // Sc(t) = !Sc(t)
+                    reg_forecast_sketch_row2.read(meta.forecast,meta.counter);          // Sf(t) 
+
+                    // update error
+                    meta.new_err_op = -meta.forecast;                                   // -Sf(t)
+                    if (meta.epoch_bit == 0) {
+                        reg_error_sketch0_row2.write(meta.counter,meta.new_err_op);     // Se(t) = -Sf(t)
+                    } else {
+                        reg_error_sketch1_row2.write(meta.counter,meta.new_err_op);     // Se(t) = -Sf(t)
+                    }
+
+                    // update forecast
+                    meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
+                    reg_forecast_sketch_row2.write(meta.counter,meta.new_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
+                }
             }
         }
     }
@@ -206,27 +214,27 @@ control UpdateRow2(inout metadata meta) {
 control UpdateEpoch1Row0(inout metadata meta) {
 	
     apply{
-        //update forecast
-        reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);
-        meta.new_forecast = SKETCH_UPDATE + meta.forecast; //sum with old value
-        reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast); //update
+        // update forecast
+        reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);        // Sf(t)
+        meta.new_forecast = SKETCH_UPDATE + meta.forecast;              // Sf(t) + S'o(t)
+        reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast);   // Sf(t) = Sf(t) + S'o(t)
     }
 }
 
 control UpdateEpoch1Row1(inout metadata meta) {
     apply{
-        //update forecast
-        reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);
-        meta.new_forecast = SKETCH_UPDATE + meta.forecast; //sum with old value
-        reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast); //update
+        // update forecast
+        reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);        // Sf(t)
+        meta.new_forecast = SKETCH_UPDATE + meta.forecast;              // Sf(t) + S'o(t)
+        reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast);   // Sf(t) = Sf(t) + S'o(t)
     }
 }
 
 control UpdateEpoch1Row2(inout metadata meta) {
     apply{
-        //update forecast
-        reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);
-        meta.new_forecast = SKETCH_UPDATE + meta.forecast; //sum with old value
-        reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast); //update
+        // update forecast
+        reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);        // Sf(t)
+        meta.new_forecast = SKETCH_UPDATE + meta.forecast;              // Sf(t) + S'o(t)
+        reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast);   // Sf(t) = Sf(t) + S'o(t)
     }
 }
