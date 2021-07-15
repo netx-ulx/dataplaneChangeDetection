@@ -1,6 +1,6 @@
 #!/bin/bash
 
-p4c --target bmv2 --arch v1model --std p4-16 p4_src/k-meleon.p4
+p4c --target bmv2 --arch v1model -DEPOCH_PKT p4_src/k-meleon.p4
 
 sudo /home/vagrant/behavioral-model/tools/veth_setup.sh
 

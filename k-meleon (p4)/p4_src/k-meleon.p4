@@ -2,10 +2,10 @@
 #include <core.p4>
 #include <v1model.p4>
 
+#include "includes/macros.p4"
 #include "includes/constants.p4"
 #include "includes/types.p4"
 #include "includes/headers.p4"
-#include "includes/macros.p4"
 #include "includes/registers.p4"
 
 
