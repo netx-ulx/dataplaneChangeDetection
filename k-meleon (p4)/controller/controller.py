@@ -76,7 +76,7 @@ class CMSController(object):
                 self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch1_row2")
                 self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
 
-		print(self.registers[3])
+                print(self.registers[3])
 
                 #reset mv keys and counters
                 self.controller.register_reset("reg_mv_sketch1_row0")
@@ -97,7 +97,7 @@ class CMSController(object):
                 self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch0_row2")
                 self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
 
-		print(self.registers[3])
+                print(self.registers[3])
 
                 #reset mv keys and counters
                 self.controller.register_reset("reg_mv_sketch0_row0")
