@@ -69,8 +69,8 @@ class CMSController(object):
                 self.registers[1] = self.registers[1] + mv_sketch_row1[len(mv_sketch_row1)/3:2*(len(mv_sketch_row1)/3)]
                 self.registers[1] = self.registers[1] + mv_sketch_row2[len(mv_sketch_row2)/3:2*(len(mv_sketch_row2)/3)]
                 self.registers.append(mv_sketch_row0[2*(len(mv_sketch_row0)/3):3*(len(mv_sketch_row0)/3)])      #2 dst ips
-                self.registers[1] = self.registers[2] + mv_sketch_row1[2*(len(mv_sketch_row1)/3):3*(len(mv_sketch_row1)/3)]
-                self.registers[1] = self.registers[2] + mv_sketch_row2[2*(len(mv_sketch_row2)/3):3*(len(mv_sketch_row2)/3)]
+                self.registers[2] = self.registers[2] + mv_sketch_row1[2*(len(mv_sketch_row1)/3):3*(len(mv_sketch_row1)/3)]
+                self.registers[2] = self.registers[2] + mv_sketch_row2[2*(len(mv_sketch_row2)/3):3*(len(mv_sketch_row2)/3)]
                 self.registers.append(self.controller.register_read("reg_error_sketch1_row0")) 					#3 error sketch
                 self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch1_row1")   	
                 self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch1_row2")
@@ -89,9 +89,9 @@ class CMSController(object):
                 self.registers.append(mv_sketch_row0[len(mv_sketch_row0)/3:2*(len(mv_sketch_row0)/3)])      #1 src ips
                 self.registers[1] = self.registers[1] + mv_sketch_row1[len(mv_sketch_row1)/3:2*(len(mv_sketch_row1)/3)]
                 self.registers[1] = self.registers[1] + mv_sketch_row2[len(mv_sketch_row2)/3:2*(len(mv_sketch_row2)/3)]
-                self.registers.append(mv_sketch_row0[2*(len(mv_sketch_row0)/3):3*(len(mv_sketch_row0)/3)])      #2 dst ips
-                self.registers[1] = self.registers[2] + mv_sketch_row1[2*(len(mv_sketch_row1)/3):3*(len(mv_sketch_row1)/3)]
-                self.registers[1] = self.registers[2] + mv_sketch_row2[2*(len(mv_sketch_row2)/3):3*(len(mv_sketch_row2)/3)]
+                self.registers.append(mv_sketch_row0[2*(len(mv_sketch_row0)/3):len(mv_sketch_row0)])      #2 dst ips
+                self.registers[2] = self.registers[2] + mv_sketch_row1[2*(len(mv_sketch_row1)/3):len(mv_sketch_row1)]
+                self.registers[2] = self.registers[2] + mv_sketch_row2[2*(len(mv_sketch_row2)/3):len(mv_sketch_row2)]
                 self.registers.append(self.controller.register_read("reg_error_sketch0_row0")) 					#3 error sketch
                 self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch0_row1")    	#1 dst ips
                 self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch0_row2")
