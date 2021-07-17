@@ -20,13 +20,13 @@ register<bit<32>>(SKETCH_WIDTH) reg_forecast_sketch_row0;    // forecast sketch 
 register<bit<32>>(SKETCH_WIDTH) reg_forecast_sketch_row1;
 register<bit<32>>(SKETCH_WIDTH) reg_forecast_sketch_row2;
 
-register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch0_row0;       // error sketch Se(t) 
-register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch0_row1;
-register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch0_row2;
+register<bit<32>>(SKETCH_WIDTH) reg_error_sketch0_row0;       // error sketch Se(t) 
+register<bit<32>>(SKETCH_WIDTH) reg_error_sketch0_row1;
+register<bit<32>>(SKETCH_WIDTH) reg_error_sketch0_row2;
 
-register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch1_row0;       // error sketch Se(t) 
-register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch1_row1;
-register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch1_row2;
+register<bit<32>>(SKETCH_WIDTH) reg_error_sketch1_row0;       // error sketch Se(t) 
+register<bit<32>>(SKETCH_WIDTH) reg_error_sketch1_row1;
+register<bit<32>>(SKETCH_WIDTH) reg_error_sketch1_row2;
 
 register<bit<1>>(SKETCH_WIDTH)  reg_controlFlag_sketch_row0;   // control-flag sketch
 register<bit<1>>(SKETCH_WIDTH)  reg_controlFlag_sketch_row1;
