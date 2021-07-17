@@ -52,7 +52,9 @@ control MyIngress(inout headers hdr,
 	UpdateEpoch1Row1() update_epoch1_row1;
 	UpdateEpoch1Row2() update_epoch1_row2;
 	
-	RevertRow() revert_row;
+	RevertRow0() revert_row0;
+	RevertRow1() revert_row1;
+	RevertRow2() revert_row2;
 	
 	
 	
@@ -174,21 +176,16 @@ control MyIngress(inout headers hdr,
 				update_epoch1_row2.apply(meta);
 			} else {
 				// first row
-				meta.hash = meta.hash0;
 				update_row0.apply(meta);
-				revert_row.apply(meta,hdr);
+				revert_row0.apply(meta,hdr);
 
 				// second row
-				meta.offset = SKETCH_WIDTH;
-				meta.hash = meta.hash1;
 				update_row1.apply(meta);
-				revert_row.apply(meta,hdr);
+				revert_row1.apply(meta,hdr);
 
 				// third row
-				meta.offset = SKETCH_WIDTH + SKETCH_WIDTH;
-				meta.hash = meta.hash2 + meta.offset;
 				update_row2.apply(meta);
-				revert_row.apply(meta,hdr);
+				revert_row2.apply(meta,hdr);
 			}
 
 		} else {

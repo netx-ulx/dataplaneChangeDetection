@@ -2,13 +2,13 @@
 //*---------------------------------------------------MV Sketch--------------------------------------------------*//
 //*--------------------------------------------------------------------------------------------------------------*//
 
-register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_srcAddr_f0;        // key field: src, when the sketch flag is 0
-register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_dstAddr_f0;        // key_field: dst, when the sketch flag is 0
-register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_srcAddr_f1;        // key field: src, when the sketch flag is 1
-register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_dstAddr_f1;        // key_field: dst, when the sketch flag is 1
+register<bit<32>>(SKETCH_WIDTH*3) reg_mv_sketch0_row0;       // error sketch Se(t) 
+register<bit<32>>(SKETCH_WIDTH*3) reg_mv_sketch0_row1;
+register<bit<32>>(SKETCH_WIDTH*3) reg_mv_sketch0_row2;
 
-register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_sketch_count_f0;   // count field for the mjrty, when the sketch flag is 0
-register<bit<32>>(SKETCH_WIDTH*SKETCH_DEPTH) reg_sketch_count_f1;   // count field for the mjrty, when the sketch flag is 1
+register<bit<32>>(SKETCH_WIDTH*3) reg_mv_sketch1_row0;       // error sketch Se(t) 
+register<bit<32>>(SKETCH_WIDTH*3) reg_mv_sketch1_row1;
+register<bit<32>>(SKETCH_WIDTH*3) reg_mv_sketch1_row2;
 
 //*--------------------------------------------------------------------------------------------------------------*//
 //*-------------------------------------------------K-Ary Sketch-------------------------------------------------*//
@@ -20,13 +20,13 @@ register<bit<32>>(SKETCH_WIDTH) reg_forecast_sketch_row0;    // forecast sketch 
 register<bit<32>>(SKETCH_WIDTH) reg_forecast_sketch_row1;
 register<bit<32>>(SKETCH_WIDTH) reg_forecast_sketch_row2;
 
-register<bit<32>>(SKETCH_WIDTH) reg_error_sketch0_row0;       // error sketch Se(t) 
-register<bit<32>>(SKETCH_WIDTH) reg_error_sketch0_row1;
-register<bit<32>>(SKETCH_WIDTH) reg_error_sketch0_row2;
+register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch0_row0;       // error sketch Se(t) 
+register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch0_row1;
+register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch0_row2;
 
-register<bit<32>>(SKETCH_WIDTH) reg_error_sketch1_row0;       // error sketch Se(t) 
-register<bit<32>>(SKETCH_WIDTH) reg_error_sketch1_row1;
-register<bit<32>>(SKETCH_WIDTH) reg_error_sketch1_row2;
+register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch1_row0;       // error sketch Se(t) 
+register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch1_row1;
+register<bit<32>>(SKETCH_WIDTH*4) reg_error_sketch1_row2;
 
 register<bit<1>>(SKETCH_WIDTH)  reg_controlFlag_sketch_row0;   // control-flag sketch
 register<bit<1>>(SKETCH_WIDTH)  reg_controlFlag_sketch_row1;
