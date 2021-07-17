@@ -71,6 +71,7 @@ struct metadata {
 	bit<32> new_err;
     bit<32> new_err_op;
 
+    bit<32> err_offset; 
     bit<32> count_offset;
     bit<32> src_offset;
 	bit<32> dst_offset;

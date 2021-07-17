@@ -165,6 +165,12 @@ control MyIngress(inout headers hdr,
 			/********************************************************/
 			/******************* UPDATE "CYCLE" *********************/
 
+			if (meta.epoch_bit == 0) {
+                meta.err_offset = 0;
+            } else {
+                meta.err_offset = SKETCH_WIDTH;
+            }
+
 			if(meta.first_epoch_flag == 0) {
 				// first row
 				update_epoch1_row0.apply(meta);
