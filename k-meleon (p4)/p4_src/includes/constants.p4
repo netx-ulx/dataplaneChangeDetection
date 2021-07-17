@@ -11,4 +11,4 @@ const bit<48> EPOCH_SIZE       		=  1000000; // epoch size in us (1 sec)
 const bit<32> SKETCH_WIDTH			=  64;  // width of the sketch
 const bit<32> SKETCH_DEPTH			=  3;   // depth of the sketch
 
-const int<32> SKETCH_UPDATE         =  2;
+const bit<32> SKETCH_UPDATE         =  2;

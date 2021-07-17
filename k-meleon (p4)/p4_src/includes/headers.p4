@@ -51,8 +51,8 @@ struct metadata {
 	bit<32> hash2;
     bit<32> tempsrc;
     bit<32> tempdst;
-    int<32> tempcount;
-    int<32> tempsum;
+    bit<32> tempcount;
+    bit<32> tempsum;
     bit<1> repass;
     bit<1> epoch_bit;
 
@@ -61,15 +61,15 @@ struct metadata {
     bit<1> epoch_changed_flag;
 	bit<32> counter;
 	bit<32> offset;
-	int<32> obs;
-	int<32> err;
-    int<32> num_packets;
+	bit<32> obs;
+	bit<32> err;
+    bit<32> num_packets;
 	bit<48> epoch_value; // epoch in # of packets or bmv2 ingress-timestamp (<48>)
-	int<32> forecast;
-	int<32> aux_forecast;
-	int<32> new_forecast;
-	int<32> new_err;
-    int<32> new_err_op;
+	bit<32> forecast;
+	bit<32> aux_forecast;
+	bit<32> new_forecast;
+	bit<32> new_err;
+    bit<32> new_err_op;
 
     bit<1> mv;
 
