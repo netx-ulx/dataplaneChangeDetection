@@ -62,22 +62,36 @@ class CMSController(object):
         if self.registers[0] != self.flag:
             self.flag = self.registers[0]
             if (self.registers[0][0] == 0): #choose error and mv sketch
-                self.registers.append(self.controller.register_read("reg_srcAddr_f1"))      #1 src ips
-                self.registers.append(self.controller.register_read("reg_dstAddr_f1"))      #2 dst ips
+                mv_sketch_row0 = self.controller.register_read("reg_mv_sketch1_row0")
+                mv_sketch_row1 = self.controller.register_read("reg_mv_sketch1_row1")
+                mv_sketch_row2 = self.controller.register_read("reg_mv_sketch1_row2")
+                self.registers.append(mv_sketch_row0[len(mv_sketch_row0)/3:2*(len(mv_sketch_row0)/3)])      #1 src ips
+                self.registers[1] = self.registers[1] + mv_sketch_row1[len(mv_sketch_row1)/3:2*(len(mv_sketch_row1)/3)]
+                self.registers[1] = self.registers[1] + mv_sketch_row2[len(mv_sketch_row2)/3:2*(len(mv_sketch_row2)/3)]
+                self.registers.append(mv_sketch_row0[2*(len(mv_sketch_row0)/3):3*(len(mv_sketch_row0)/3)])      #2 dst ips
+                self.registers[1] = self.registers[2] + mv_sketch_row1[2*(len(mv_sketch_row1)/3):3*(len(mv_sketch_row1)/3)]
+                self.registers[1] = self.registers[2] + mv_sketch_row2[2*(len(mv_sketch_row2)/3):3*(len(mv_sketch_row2)/3)]
                 self.registers.append(self.controller.register_read("reg_error_sketch1_row0")) 					#3 error sketch
-                self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch1_row1")   	#1 dst ips
+                self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch1_row1")   	
                 self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch1_row2")
                 self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
 
 		print(self.registers[3])
 
                 #reset mv keys and counters
-                self.controller.register_reset("reg_srcAddr_f1")
-                self.controller.register_reset("reg_dstAddr_f1")
-                self.controller.register_reset("reg_sketch_count_f1")
+                self.controller.register_reset("reg_mv_sketch1_row0")
+                self.controller.register_reset("reg_mv_sketch1_row1")
+                self.controller.register_reset("reg_mv_sketch1_row2")
             else:
-                self.registers.append(self.controller.register_read("reg_srcAddr_f0"))      #1 src ips
-                self.registers.append(self.controller.register_read("reg_dstAddr_f0"))      #2 dst ips
+                mv_sketch_row0 = self.controller.register_read("reg_mv_sketch0_row0")
+                mv_sketch_row1 = self.controller.register_read("reg_mv_sketch0_row1")
+                mv_sketch_row2 = self.controller.register_read("reg_mv_sketch0_row2")
+                self.registers.append(mv_sketch_row0[len(mv_sketch_row0)/3:2*(len(mv_sketch_row0)/3)])      #1 src ips
+                self.registers[1] = self.registers[1] + mv_sketch_row1[len(mv_sketch_row1)/3:2*(len(mv_sketch_row1)/3)]
+                self.registers[1] = self.registers[1] + mv_sketch_row2[len(mv_sketch_row2)/3:2*(len(mv_sketch_row2)/3)]
+                self.registers.append(mv_sketch_row0[2*(len(mv_sketch_row0)/3):3*(len(mv_sketch_row0)/3)])      #2 dst ips
+                self.registers[1] = self.registers[2] + mv_sketch_row1[2*(len(mv_sketch_row1)/3):3*(len(mv_sketch_row1)/3)]
+                self.registers[1] = self.registers[2] + mv_sketch_row2[2*(len(mv_sketch_row2)/3):3*(len(mv_sketch_row2)/3)]
                 self.registers.append(self.controller.register_read("reg_error_sketch0_row0")) 					#3 error sketch
                 self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch0_row1")    	#1 dst ips
                 self.registers[3] = self.registers[3] + self.controller.register_read("reg_error_sketch0_row2")
@@ -86,9 +100,9 @@ class CMSController(object):
 		print(self.registers[3])
 
                 #reset mv keys and counters
-                self.controller.register_reset("reg_srcAddr_f0")
-                self.controller.register_reset("reg_dstAddr_f0")
-                self.controller.register_reset("reg_sketch_count_f0")   
+                self.controller.register_reset("reg_mv_sketch0_row0")
+                self.controller.register_reset("reg_mv_sketch0_row1")
+                self.controller.register_reset("reg_mv_sketch0_row2")   
         else:
             self.registers[0] = None
 
