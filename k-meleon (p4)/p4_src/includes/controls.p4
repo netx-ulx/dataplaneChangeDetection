@@ -70,7 +70,7 @@ control UpdateRow1(inout metadata meta) {
             
             // update error
             meta.new_err = SKETCH_UPDATE - meta.forecast;               // S’o(t) - Sf(t)
-            reg_error_sketch1_row1.write(meta.hash1,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
+            reg_error_sketch_row1.write(meta.hash1+meta.err_offset,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
 
             // update forecast
             meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
