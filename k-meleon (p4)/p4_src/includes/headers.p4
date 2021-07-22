@@ -49,45 +49,6 @@ header udp_t {
 }
 
 struct metadata {
-<<<<<<< HEAD:p4/p4_src/includes/headers.p4
-	/* To index the sketch cells */
-	bit<32> hash0_value;
-	bit<32> hash1_value;
-	bit<32> hash2_value;
-	/* ------------------------ */
-	/* To manage epoch changes  */
-    bit<1> epoch_bit;
-	bit<1> ctrl_bit;
-    bit<1> first_epoch_flag;
-    bit<1> epoch_changed_flag;
-    bit<1> ctrl_changed_flag;
-	bit<32> offset; // to read the proper epoch values from the skecth registers
-	bit<48> epoch_value; // epoch in # of packets or bmv2 ingress-timestamp (<48>)
-	/* ------------------------ */
-	/* To compute sketch updates */
-	int<32> obs;
-	int<32> err;
-	int<32> forecast;
-	int<32> aux_forecast;
-	int<32> new_forecast;
-	int<32> new_err;
-	/* ------------------------ */
-	#ifdef REVERT
-    bit<32> current_flowsrc;
-    bit<32> current_flowdst;
-    bit<32> stored_flowsrc;
-    bit<32> stored_flowdst;
-    int<32> flowKey_count;
-	#endif
-	/* ------------------------ */
-	#ifdef COUNT_PKT
-    int<32> num_packets;
-	#endif
-	/* ------------------------ */
-	#ifdef EXTRA_OP
-	bit<32> extraOp_counter;
-	#endif
-=======
     bit<32> hash;
 	bit<32> hash0;
 	bit<32> hash1;
@@ -121,7 +82,6 @@ struct metadata {
 
     bit<1> mv;
 
->>>>>>> epoch-in-seconds:k-meleon (p4)/p4_src/includes/headers.p4
 }
 
 struct headers {
