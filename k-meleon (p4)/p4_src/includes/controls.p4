@@ -1,229 +1,216 @@
-#ifdef EXTRA_OP
-	#include "includes/extraOp_ctrl.p4"
-#endif
+/*********************************************************
+***************** BIT-SHIFT BLOCKS ******************
+**********************************************************/
 
-/* 
-*  The three control blocks here presented contain the same exact code
-*  yet applied to different register memories. So, it is sufficient to 
-*  check only the logic of one block to understand the operations which
-*  are performed identically on the different h=3 rows of the sketch
-*  data structures.
-*/
+#include "bit-shifts.p4"
+
+/*********************************************************
+***************** MAIN UPDATE FUNCTION ********************
+**********************************************************/
 
 control UpdateRow0(inout metadata meta) {
+	apply {
+        // SKETCH + FORECASTING MODULE
+        reg_controlFlag_sketch_row0.read(meta.ctrl,meta.hash0); 
+        if (meta.ctrl != meta.epoch_bit) { // If equals, copy forecast_sketch
+            reg_controlFlag_sketch_row0.write(meta.hash0,meta.epoch_bit);   // Flip  control  flag
+            
+            reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);    // Sf(t)
 
-#ifdef EXTRA_OP
-	ExtraOpRow0() extraOp_row0;
-#endif
-
-apply {
-
-		// checking whether or not ctrl and epoch bits are already aligned
-		reg_controlFlag_sketch0.read(meta.ctrl_bit,meta.hash0_value); 
-		if (meta.ctrl_bit != meta.epoch_bit) {
-			reg_controlFlag_sketch0.write(meta.hash0_value,1);
-			meta.ctrl_changed_flag = 1;
-		}
-
-		// update error and forecast sketch with both observed and forecast
-		if ( meta.ctrl_changed_flag == 1) {
-			
-			/**** update the forecast sketch ****/
-			reg_forecast_sketch_row0.read(meta.forecast,meta.hash0_value);
-
-			//compute the new value  Sf(t+1) = aplha * So(t) + (1-alpha) * Sf(t)
-			meta.obs = 10 >> BIT_SHIFT; //division by alpha
-			meta.aux_forecast = meta.forecast >> BIT_SHIFT; //division by alpha
-			meta.new_forecast = meta.obs + meta.aux_forecast;
-			
-			reg_forecast_sketch_row0.write(meta.hash0_value,meta.new_forecast);
-			/***********************************/
-
-			/***** update error sketch - Se(t) = So(t) - Sf(t) ****/
-			meta.new_err = 10 - meta.forecast;
-			reg_error_sketch_row0.write(meta.hash0_value,meta.new_err);
-			/*****************************************************/
+            // update error
+            meta.new_err = SKETCH_UPDATE - meta.forecast;               // S’o(t) - Sf(t)
+            reg_error_sketch_row0.write(meta.hash0+meta.err_offset,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
 
 
-		} else { //else, update error and forecast sketch with only observed
+            // update forecast
+            observedShift(meta);
+            forecastShift(meta);
+            //meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            //meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
+            meta.new_forecast = meta.obs + meta.aux_forecast;           // alpha*S’o(t) + (1-alpha)*Sf(t)
 
-			/**** update the forecast sketch ****/
-			reg_forecast_sketch_row0.read(meta.forecast,meta.hash0_value);
+            // Sf(t+1) = alpha*S’o(t) + (1-alpha)*Sf(t)
+            reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast); 
+        } else { //else, only update with observed
+            // update error
+            reg_error_sketch_row0.read(meta.err,meta.hash0+meta.err_offset);       // Se(t)
+            meta.new_err = meta.err + SKETCH_UPDATE;                // Se(t) + S’o(t)
+            reg_error_sketch_row0.write(meta.hash0+meta.err_offset,meta.new_err);  // Se(t) = Se(t) + S’o(t)
 
-			//compute the new value  Sf(t+1) += aplha * So(t)
-			meta.obs = 10 >> BIT_SHIFT; //division by alpha
-			meta.new_forecast = meta.obs + meta.forecast;
-			
-			reg_forecast_sketch_row0.write(meta.hash0_value,meta.new_forecast);
-			/***********************************/
+            // update forecast
+            reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);    // Sf(t+1)
+            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            meta.new_forecast = meta.obs + meta.forecast;               // Sf(t+1) + alpha*S’o(t)
 
+            // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
+            reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast);
 
-			/***** update error sketch - Se(t) += So(t) ****/
-			reg_error_sketch_row0.read(meta.err,meta.hash0_value);
-			meta.new_err = meta.err + 10;
-			reg_error_sketch_row0.write(meta.hash0_value,meta.new_err);
-			/**********************************************/
+            // compute one extra op
+            reg_extraOp_counter.read(meta.counter,0);
+            if (meta.counter < SKETCH_WIDTH) {
+                reg_extraOp_counter.write(0,meta.counter+1);
+                reg_controlFlag_sketch_row0.read(meta.ctrl,meta.counter);               // Sc(t)
+                if (meta.ctrl != meta.epoch_bit) { // If diff, copy forecast_sketch
+                    reg_controlFlag_sketch_row0.write(meta.counter,meta.epoch_bit);     // Sc(t) = !Sc(t)
+                    reg_forecast_sketch_row0.read(meta.forecast,meta.counter);          // Sf(t) 
 
-		}
+                    // update error
+                    meta.new_err_op = -meta.forecast;                                   // -Sf(t)
+                    reg_error_sketch_row0.write(meta.counter+meta.err_offset,meta.new_err_op);     // Se(t) = -Sf(t)
 
-		#ifdef EXTRA_OP
-			// perform an additional update of the sketch data structures at a different index
-			extraOp_row0.apply(meta);
-		#endif
-
-	} // end of the apply block
+                    // update forecast
+                    forecastShift(meta); 
+                    //meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
+                    reg_forecast_sketch_row0.write(meta.counter,meta.aux_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
+                }
+            }
+        }
+    }
 }
 
 control UpdateRow1(inout metadata meta) {
+	apply{
+        // SKETCH + FORECASTING MODULE
+        reg_controlFlag_sketch_row1.read(meta.ctrl,meta.hash1); 
+        if (meta.ctrl != meta.epoch_bit) {  // If equals, copy forecast_sketch
+            reg_controlFlag_sketch_row1.write(meta.hash1,meta.epoch_bit);   //  Flip  control  flag
+            
+            reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);    // Sf(t)
+            
+            // update error
+            meta.new_err = SKETCH_UPDATE - meta.forecast;               // S’o(t) - Sf(t)
+            reg_error_sketch_row1.write(meta.hash1+meta.err_offset,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
 
-#ifdef EXTRA_OP
-	ExtraOpRow1() extraOp_row1;
-#endif
+            // update forecast
+            observedShift(meta);
+            forecastShift(meta);
+            //meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            //meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
+            meta.new_forecast = meta.obs + meta.aux_forecast;           // alpha*S’o(t) + (1-alpha)*Sf(t)
 
-apply {
-
-		// checking whether or not ctrl and epoch bits are already aligned
-		reg_controlFlag_sketch1.read(meta.ctrl_bit,meta.hash1_value); 
-		if (meta.ctrl_bit != meta.epoch_bit) {
-			reg_controlFlag_sketch1.write(meta.hash1_value,1);
-			meta.ctrl_changed_flag = 1;
-		}
-
-		// update error and forecast sketch with both observed and forecast
-		if ( meta.ctrl_changed_flag == 1) {
-			
-			/**** update the forecast sketch ****/
-			reg_forecast_sketch_row1.read(meta.forecast,meta.hash1_value);
-
-			//compute the new value  Sf(t+1) = aplha * So(t) + (1-alpha) * Sf(t)
-			meta.obs = 10 >> BIT_SHIFT; //division by alpha
-			meta.aux_forecast = meta.forecast >> BIT_SHIFT; //division by alpha
-			meta.new_forecast = meta.obs + meta.aux_forecast;
-			
-			reg_forecast_sketch_row1.write(meta.hash1_value,meta.new_forecast);
-			/***********************************/
-
-			/***** update error sketch - Se(t) = So(t) - Sf(t) ****/
-			meta.new_err = 10 - meta.forecast;
-			reg_error_sketch_row1.write(meta.hash1_value,meta.new_err);
-			/*****************************************************/
+            // Sf(t+1) = alpha*S’o(t) + (1-alpha)*Sf(t)
+            reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast);
+        } else {    // else, only update with observed
+            // update error
+            reg_error_sketch_row1.read(meta.err,meta.hash1+meta.err_offset);        // Se(t)
+            meta.new_err = meta.err + SKETCH_UPDATE;                                // Se(t) + S’o(t)
+            reg_error_sketch_row1.write(meta.hash1+meta.err_offset,meta.new_err);   // Se(t) = Se(t) + S’o(t)
 
 
-		} else { //else, update error and forecast sketch with only observed
+            // update forecast
+            reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);    // Sf(t+1)
+            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            meta.new_forecast = meta.obs + meta.forecast;               // Sf(t+1) + alpha*S’o(t)
+            
+            // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
+            reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast); 
 
-			/**** update the forecast sketch ****/
-			reg_forecast_sketch_row1.read(meta.forecast,meta.hash1_value);
+            // compute one extra op
+            reg_extraOp_counter.read(meta.counter,1);
+            if (meta.counter < SKETCH_WIDTH) {
+                reg_extraOp_counter.write(1,meta.counter+1);
+                reg_controlFlag_sketch_row1.read(meta.ctrl,meta.counter);               // Sc(t)
+                if (meta.ctrl != meta.epoch_bit) { // If diff, copy forecast_sketch
+                    reg_controlFlag_sketch_row1.write(meta.counter,meta.epoch_bit);     // Sc(t) = !Sc(t)
+                    reg_forecast_sketch_row1.read(meta.forecast,meta.counter);          // Sf(t) 
 
-			//compute the new value  Sf(t+1) += aplha * So(t)
-			meta.obs = 10 >> BIT_SHIFT; //division by alpha
-			meta.new_forecast = meta.obs + meta.forecast;
-			
-			reg_forecast_sketch_row1.write(meta.hash1_value,meta.new_forecast);
-			/***********************************/
+                    // update error
+                    meta.new_err_op = -meta.forecast;                                   // -Sf(t)
+                    reg_error_sketch_row1.write(meta.counter+meta.err_offset,meta.new_err_op);     // Se(t) = -Sf(t)
 
-			/***** update error sketch - Se(t) += So(t) ****/
-			reg_error_sketch_row1.read(meta.err,meta.hash1_value);
-			meta.new_err = meta.err + 10;
-			reg_error_sketch_row1.write(meta.hash1_value,meta.new_err);
-			/**********************************************/
-
-		}
-
-		#ifdef EXTRA_OP
-			// perform an additional update of the sketch data structures at a different index
-			extraOp_row1.apply(meta);
-		#endif
-
-	} // end of the apply block
+                    // update forecast
+                    forecastShift(meta); 
+                    //meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
+                    reg_forecast_sketch_row1.write(meta.counter,meta.aux_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
+                }
+            }
+        }
+    }
 }
 
 control UpdateRow2(inout metadata meta) {
+	apply{
+        // SKETCH + FORECASTING MODULE
+        reg_controlFlag_sketch_row2.read(meta.ctrl,meta.hash2); 
+        if (meta.ctrl != meta.epoch_bit) {  // If equals, copy forecast_sketch
+            reg_controlFlag_sketch_row2.write(meta.hash2,meta.epoch_bit);   //  Flip  control  flag
+            
+            reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);    // Sf(t)
+            
+            // update error
+            meta.new_err = SKETCH_UPDATE - meta.forecast;               // S’o(t) - Sf(t)
+            reg_error_sketch_row2.write(meta.hash2+meta.err_offset,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
 
-#ifdef EXTRA_OP
-	ExtraOpRow2() extraOp_row2;
-#endif
+            // update forecast
+            observedShift(meta);
+            forecastShift(meta);            
+            //meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            //meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
+            meta.new_forecast = meta.obs + meta.aux_forecast;           // alpha*S’o(t) + (1-alpha)*Sf(t)
 
-apply {
+            // Sf(t+1) = alpha*S’o(t) + (1-alpha)*Sf(t)
+            reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast);
+        } else {    // else, only update with observed
+            // update error
+            reg_error_sketch_row2.read(meta.err,meta.hash2+meta.err_offset);       // Se(t)
+            meta.new_err = meta.err + SKETCH_UPDATE;                // Se(t) + S’o(t)
+            reg_error_sketch_row2.write(meta.hash2+meta.err_offset,meta.new_err);  // Se(t) = Se(t) + S’o(t)
 
-		// checking whether or not ctrl and epoch bits are already aligned
-		reg_controlFlag_sketch2.read(meta.ctrl_bit,meta.hash2_value); 
-		if (meta.ctrl_bit != meta.epoch_bit) {
-			reg_controlFlag_sketch2.write(meta.hash2_value,1);
-			meta.ctrl_changed_flag = 1;
-		}
+            // update forecast
+            reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);    // Sf(t+1)
+            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            meta.new_forecast = meta.obs + meta.forecast;               // Sf(t+1) + alpha*S’o(t)
+            
+            // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
+            reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast); 
 
-		// update error and forecast sketch with both observed and forecast
-		if ( meta.ctrl_changed_flag == 1) {
-			
-			/**** update the forecast sketch ****/
-			reg_forecast_sketch_row2.read(meta.forecast,meta.hash2_value);
+            // compute one extra op
+            reg_extraOp_counter.read(meta.counter,2);
+            if (meta.counter < SKETCH_WIDTH) {
+                reg_extraOp_counter.write(2,meta.counter+1);
+                reg_controlFlag_sketch_row2.read(meta.ctrl,meta.counter);               // Sc(t)
+                if (meta.ctrl != meta.epoch_bit) { // If diff, copy forecast_sketch
+                    reg_controlFlag_sketch_row2.write(meta.counter,meta.epoch_bit);     // Sc(t) = !Sc(t)
+                    reg_forecast_sketch_row2.read(meta.forecast,meta.counter);          // Sf(t) 
 
-			//compute the new value  Sf(t+1) = aplha * So(t) + (1-alpha) * Sf(t)
-			meta.obs = 10 >> BIT_SHIFT; //division by alpha
-			meta.aux_forecast = meta.forecast >> BIT_SHIFT; //division by alpha
-			meta.new_forecast = meta.obs + meta.aux_forecast;
-			
-			reg_forecast_sketch_row2.write(meta.hash2_value,meta.new_forecast);
-			/***********************************/
+                    // update error
+                    meta.new_err_op = -meta.forecast;                                   // -Sf(t)
+                    reg_error_sketch_row2.write(meta.counter+meta.err_offset,meta.new_err_op);     // Se(t) = -Sf(t)
 
-			/***** update error sketch - Se(t) = So(t) - Sf(t) ****/
-			meta.new_err = 10 - meta.forecast;
-			reg_error_sketch_row2.write(meta.hash2_value,meta.new_err);
-			/*****************************************************/
-
-
-		} else { //else, update error and forecast sketch with only observed
-
-			/**** update the forecast sketch ****/
-			reg_forecast_sketch_row2.read(meta.forecast,meta.hash2_value);
-
-			//compute the new value  Sf(t+1) += aplha * So(t)
-			meta.obs = 10 >> BIT_SHIFT; //division by alpha
-			meta.new_forecast = meta.obs + meta.forecast;
-			
-			reg_forecast_sketch_row2.write(meta.hash2_value,meta.new_forecast);
-			/***********************************/
-
-			/***** update error sketch - Se(t) += So(t) ****/
-			reg_error_sketch_row2.read(meta.err,meta.hash2_value);
-			meta.new_err = meta.err + 10;
-			reg_error_sketch_row2.write(meta.hash2_value,meta.new_err);
-			/**********************************************/
-
-
-		}
-
-		#ifdef EXTRA_OP
-			// perform an additional update of the sketch data structures at a different index
-			extraOp_row2.apply(meta);
-		#endif
-
-	} // end of the apply block
+                    // update forecast
+                    forecastShift(meta); 
+                    //meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
+                    reg_forecast_sketch_row2.write(meta.counter,meta.aux_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
+                }
+            }
+        }
+    }
 }
 
-control UpdateRow_Epoch1_Row0(inout metadata meta) {
-	apply {
-	//update forecast
-	reg_forecast_sketch_row0.read(meta.forecast,meta.hash0_value);
-	meta.new_forecast = 10 + meta.forecast; //sum with old value
-	reg_forecast_sketch_row0.write(meta.hash0_value,meta.new_forecast); //update
-	}
+control UpdateEpoch1Row0(inout metadata meta) {
+	
+    apply{
+        // update forecast
+        reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);        // Sf(t)
+        meta.new_forecast = SKETCH_UPDATE + meta.forecast;              // Sf(t) + S'o(t)
+        reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast);   // Sf(t) = Sf(t) + S'o(t)
+    }
 }
 
-control UpdateRow_Epoch1_Row1(inout metadata meta) {
-	apply {
-	//update forecast
-	reg_forecast_sketch_row1.read(meta.forecast,meta.hash1_value);
-	meta.new_forecast = 10 + meta.forecast; //sum with old value
-	reg_forecast_sketch_row1.write(meta.hash1_value,meta.new_forecast); //update
-	}
+control UpdateEpoch1Row1(inout metadata meta) {
+    apply{
+        // update forecast
+        reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);        // Sf(t)
+        meta.new_forecast = SKETCH_UPDATE + meta.forecast;              // Sf(t) + S'o(t)
+        reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast);   // Sf(t) = Sf(t) + S'o(t)
+    }
 }
 
-control UpdateRow_Epoch1_Row2(inout metadata meta) {
-	apply {
-	//update forecast
-	reg_forecast_sketch_row2.read(meta.forecast,meta.hash2_value);
-	meta.new_forecast = 10 + meta.forecast; //sum with old value
-	reg_forecast_sketch_row2.write(meta.hash2_value,meta.new_forecast); //update
-	}
+control UpdateEpoch1Row2(inout metadata meta) {
+    apply{
+        // update forecast
+        reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);        // Sf(t)
+        meta.new_forecast = SKETCH_UPDATE + meta.forecast;              // Sf(t) + S'o(t)
+        reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast);   // Sf(t) = Sf(t) + S'o(t)
+    }
 }

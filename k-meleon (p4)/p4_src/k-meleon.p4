@@ -2,8 +2,9 @@
 #include <core.p4>
 #include <v1model.p4>
 
-#include "includes/constants.p4"
 #include "includes/macros.p4"
+#include "includes/constants.p4"
+#include "includes/types.p4"
 #include "includes/headers.p4"
 #include "includes/registers.p4"
 
@@ -27,13 +28,13 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 
 #include "includes/controls.p4"
 
+
 /*********************************************************
 ************** REVERSIBILITY CONTROL BLOCKS **************
 **********************************************************/
 
-#ifdef REVERT
-	#include "includes/reversibility.p4"
-#endif
+#include "includes/reversibility.p4"
+
 
 /*********************************************************
 ***************** INGRESS PROCESSING *******************
@@ -42,49 +43,39 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 control MyIngress(inout headers hdr,
 		  inout metadata meta,
 		  inout standard_metadata_t standard_metadata) {
-
+    
 	UpdateRow0() update_row0;
 	UpdateRow1() update_row1;
 	UpdateRow2() update_row2;
-
-	UpdateRow_Epoch1_Row0() update_epoch1_row0;
-	UpdateRow_Epoch1_Row1() update_epoch1_row1;
-	UpdateRow_Epoch1_Row2() update_epoch1_row2;
-
-
-	#ifdef REVERT
+	
+	UpdateEpoch1Row0() update_epoch1_row0;
+	UpdateEpoch1Row1() update_epoch1_row1;
+	UpdateEpoch1Row2() update_epoch1_row2;
+	
 	RevertRow0() revert_row0;
 	RevertRow1() revert_row1;
 	RevertRow2() revert_row2;
-	#endif
-
-
-    action drop() {
-		mark_to_drop(standard_metadata);
+	
+	
+	
+	action drop() {
+	mark_to_drop(standard_metadata);
     }
 
-    // specify the output port for the current pkt
+    //forward packets to the specified port
     action set_egr(egressSpec_t port) {
-		standard_metadata.egress_spec = port;
+	standard_metadata.egress_spec = port;
     }
 
-    // calculate hash functions and store values in metadata
-    action calc_hash() {
-
-		hash(meta.hash0_value, HashAlgorithm.crc32_custom, 64w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash value for first row of the count sketch
-		hash(meta.hash1_value, HashAlgorithm.crc32_custom, 64w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash value for second row of the count sketch
-		hash(meta.hash2_value, HashAlgorithm.crc32_custom, 64w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash value for third row of the count sketch
+    //action: calculate hash functions
+    //store hash index of each packet in metadata
+    action cal_hash() {
+	hash(meta.hash0, HashAlgorithm.crc32_custom, 64w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for first row
+	hash(meta.hash1, HashAlgorithm.crc32_custom, 64w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for second row
+	hash(meta.hash2, HashAlgorithm.crc32_custom, 64w0, {hdr.ipv4.srcAddr,hdr.ipv4.dstAddr}, SKETCH_WIDTH); //hash for third row
     }
 
-    // add the offset to the indexes
-    action update_indexes() {
-		meta.hash0_value = meta.hash0_value + meta.offset;
-		meta.hash1_value = meta.hash1_value + meta.offset;
-		meta.hash2_value = meta.hash2_value + meta.offset;
-    }
-
-
-    table forward_tbl {
+    table forward {
 	key = {
 	    standard_metadata.ingress_port: exact;
 	}
@@ -96,30 +87,24 @@ control MyIngress(inout headers hdr,
 	default_action = drop();
     }
 
-apply {
 
-		// above a certain rate bmv2 starts dropping pkts, so we used to track the packets processed by it
-		#ifdef COUNT_PKT
-
+    apply {
 		reg_total_num_packets.read(meta.num_packets,0);
 		meta.num_packets = meta.num_packets + 1;
 		reg_total_num_packets.write(0,meta.num_packets);
 
-		#endif /* COUNT_PKT */
-
-
-
 		if (hdr.ipv4.isValid()) {
+			forward.apply();
 
-			forward_tbl.apply(); // simple fw table to specify egress port based on the input port
+			//calculate hash value
+			cal_hash();
 
-			//calculate hash values for the the h rows of the count sketch - h=3 in this program
-			calc_hash();
-
+			/********************************************************/
 			/***************** EPOCH VERIFICATION *******************/
 
+
 			reg_epoch_value.read(meta.epoch_value,0);
-			
+
 			#ifdef EPOCH_PKT /* epoch calculated with the number of packets processed */
 
 			if ( meta.epoch_value >= EPOCH_SIZE) { 
@@ -138,40 +123,32 @@ apply {
 				reg_epoch_bit.read(meta.epoch_bit,0);
 
 				if (meta.epoch_bit == 0) {
-					reg_epoch_bit.write(0,1);
-					meta.offset = SKETCH_WIDTH;
+					meta.epoch_bit = 1;
+					reg_epoch_bit.write(0,meta.epoch_bit);
 				} else {
-					reg_epoch_bit.write(0,0);
-					meta.offset = 0;
+					meta.epoch_bit = 0;
+					reg_epoch_bit.write(0,meta.epoch_bit);
 				}
 
 				# flag to signal that epoch has changed
 				meta.epoch_changed_flag = 1;
-
 			}
-
-			/********************************************************/
-		
 
 			// we have 1-bit register to apply a different forecast formula (EWMA for t=2) to the sketch structures only in the 1st epoch
 			// we use a somehow counterintuitive choice of a value of 0 meaning this is the first epoch and a value of 1 otherwise
  			// since a register cannot be initialized to any value in the P4 program itself
 			reg_first_epoch_flag.read(meta.first_epoch_flag,0);
 
-			if ( meta.epoch_changed_flag == 1) {
+			if (meta.epoch_changed_flag == 1) {
 				
 				meta.first_epoch_flag = 1;
 				reg_first_epoch_flag.write(0,meta.first_epoch_flag); // from now on, this register will always hold the value 1 
 
-				// update the indexes with the offsets to read sketch values for the current epoch
-				update_indexes();
-
-				#ifdef EXTRA_OP
-					// reset the extraOp counters
-					reg_extraOp_counter.write(0,SKETCH_WIDTH-1);
-					reg_extraOp_counter.write(1,SKETCH_WIDTH-1);
-					reg_extraOp_counter.write(2,SKETCH_WIDTH-1);
-				#endif
+				// reset the extraOp counters
+				reg_extraOp_counter.write(0,0);
+				reg_extraOp_counter.write(1,0);
+				reg_extraOp_counter.write(2,0);
+				reg_packet_changed.write(0,meta.num_packets);
 			}
 			else {
 
@@ -185,58 +162,44 @@ apply {
 				#endif
 			}
 
-
-
-			#ifdef COUNT_PKT
-			reg_packet_changed.write(0,meta.num_packets); // I am not sure what this was meant for
-			#endif
-			
-
+			/********************************************************/
 			/******************* UPDATE "CYCLE" *********************/
-			// the same set of operations are applied to the h=3 rows of k-meleon data structures
 
-			//update first row - h0
-			update_row0.apply(meta);
+			if (meta.epoch_bit == 0) {
+                meta.err_offset = 0;
+            } else {
+                meta.err_offset = SKETCH_WIDTH;
+            }
 
-			// the following additional update of the data structures only happens once in the first epoch (EWMA for t=2)
 			if(meta.first_epoch_flag == 0) {
+				// first row
 				update_epoch1_row0.apply(meta);
-			}
 
-			#ifdef REVERT
-			meta.current_flowsrc = hdr.ipv4.srcAddr;
-			meta.current_flowdst = hdr.ipv4.dstAddr;
-			revert_row0.apply(meta);
-			#endif
-
-			//update second row - h1
-			update_row1.apply(meta);
-
-			// the following additional update of the data structures only happens once in the first epoch (EWMA for t=2)
-			if(meta.first_epoch_flag == 0) {
+				// second row
 				update_epoch1_row1.apply(meta);
-			}
 
-			#ifdef REVERT
-			revert_row1.apply(meta);
-			#endif
-
-			//update third row - h2
-			update_row2.apply(meta);
-
-			// the following additional update of the data structures only happens once in the first epoch (EWMA for t=2)
-			if(meta.first_epoch_flag == 0) {
+				// third row
 				update_epoch1_row2.apply(meta);
+			} else {
+				// first row
+				update_row0.apply(meta);
+				revert_row0.apply(meta,hdr);
+
+				// second row
+				update_row1.apply(meta);
+				revert_row1.apply(meta,hdr);
+
+				// third row
+				update_row2.apply(meta);
+				revert_row2.apply(meta,hdr);
 			}
 
-			#ifdef REVERT
-			revert_row2.apply(meta);
-			#endif
-
+		} else {
+			//reg_epoch.read(meta.epoch,0);
+			//meta.epoch = meta.epoch + 1;
+			//epoch.write(0,meta.epoch); //reset packet counter
 		}
-
-    } // endif ipv4.isValid()
-
+    }
 }
 
 

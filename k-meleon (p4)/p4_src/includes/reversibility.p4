@@ -1,107 +1,137 @@
-/*
-*						MODULO FUNCTIONALITY
-* These control blocks are meant to store keys for k-meleon error sketch so to enable
-* the sketch reversibility, that is, the possibility to track keys responsible for large errors (changes). 
-* To reduce the number of keys to be stored per epoch to the size (SKETCH_DEPTH*SKETCH_WIDTH) of the error
-* sketch at worst, this modulo uses the voting algorithm1 proposed in the MV-Sketch paper (INFOCOM19) to 
-* elect a key to be stored based on observed counters for stored keys. 
-*/
-
-
-/* 
-*  The three control blocks here presented contain the same exact code
-*  yet applied to different register memories. So, it is sufficient to 
-*  check only the logic of one block to understand the operations which
-*  are performed identically on the different h=3 rows of the sketch
-*  data structures.
-*/
-
-control RevertRow0(inout metadata meta) {
-
-apply {
-
-	    //compare candidate flow key with current flow key
-		reg_flowsrc_row0.read(meta.stored_flowsrc, meta.hash0_value);
-		reg_flowdst_row0.read(meta.stored_flowdst, meta.hash0_value);
-		reg_flowKey_count_row0.read(meta.flowKey_count, meta.hash0_value);
-
-		if ( meta.stored_flowsrc != meta.current_flowsrc || meta.stored_flowdst != meta.current_flowdst ) { //if keys are different check counter
-
-			if (meta.flowKey_count == 0) { 
-
-				reg_flowsrc_row0.write(meta.hash0_value, meta.current_flowsrc);
-				reg_flowdst_row0.write(meta.hash0_value, meta.current_flowdst);
-				reg_flowKey_count_row0.write(meta.hash0_value, meta.flowKey_count + 1);
-
-			} else if (meta.flowKey_count > 0) { //if counter is not zero decrement counter by 1
-
-				reg_flowKey_count_row0.write(meta.hash0_value, meta.flowKey_count - 1);
-
-			}	
-
-		} else { // the current key corresponds to the stored key, then increment the counter
-
-			reg_flowKey_count_row0.write(meta.hash0_value, meta.flowKey_count + 1);
-		}
-	}
+/********************************************************/
+/*********** MAJORITY VOTE ALGORITHM (MJRTY) ************/
+/********************************************************/
+control RevertRow0(inout metadata meta, inout headers hdr) {
+	apply{
+        meta.src_offset = SKETCH_WIDTH;
+        meta.dst_offset = 2*SKETCH_WIDTH;
+        //compare candidate flow key with current flow key
+        if (meta.epoch_bit == 0) {
+            reg_mv_sketch0_row0.read(meta.tempsrc, meta.hash0+meta.src_offset);
+            reg_mv_sketch0_row0.read(meta.tempdst, meta.hash0+meta.dst_offset);
+            reg_mv_sketch0_row0.read(meta.tempcount, meta.hash0);
+            if (meta.tempsrc!= hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
+                if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
+                    reg_mv_sketch0_row0.write(meta.hash0+meta.src_offset, hdr.ipv4.srcAddr);
+                    reg_mv_sketch0_row0.write(meta.hash0+meta.dst_offset, hdr.ipv4.dstAddr);
+                    meta.tempcount = 1;
+                    reg_mv_sketch0_row0.write(meta.hash0, meta.tempcount);
+                } else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
+                    meta.tempcount = meta.tempcount - 1;
+                    reg_mv_sketch0_row0.write(meta.hash0, meta.tempcount);
+                }		
+            } else { // if keys are equal increment counter by 1
+                meta.tempcount = meta.tempcount + 1;
+                reg_mv_sketch0_row0.write(meta.hash0, meta.tempcount);
+            }
+        } else {
+            reg_mv_sketch1_row0.read(meta.tempsrc, meta.hash0+meta.src_offset);
+            reg_mv_sketch1_row0.read(meta.tempdst, meta.hash0+meta.dst_offset);
+            reg_mv_sketch1_row0.read(meta.tempcount, meta.hash0);
+            if (meta.tempsrc != hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
+                if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
+                    reg_mv_sketch1_row0.write(meta.hash0+meta.src_offset, hdr.ipv4.srcAddr);
+                    reg_mv_sketch1_row0.write(meta.hash0+meta.dst_offset, hdr.ipv4.dstAddr);
+                    meta.tempcount = 1;
+                    reg_mv_sketch1_row0.write(meta.hash0, meta.tempcount);
+                } else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
+                    meta.tempcount = meta.tempcount - 1;
+                    reg_mv_sketch1_row0.write(meta.hash0, meta.tempcount);
+                }		
+            } else { // if keys are equal increment counter by 1
+                meta.tempcount = meta.tempcount + 1;
+                reg_mv_sketch1_row0.write(meta.hash0, meta.tempcount);
+            }
+        }
+    }
 }
 
-control RevertRow1(inout metadata meta) {
-
-apply {
-
-	    //compare candidate flow key with current flow key
-		reg_flowsrc_row1.read(meta.stored_flowsrc, meta.hash0_value);
-		reg_flowdst_row1.read(meta.stored_flowdst, meta.hash0_value);
-		reg_flowKey_count_row1.read(meta.flowKey_count, meta.hash1_value);
-
-		if ( meta.stored_flowsrc != meta.current_flowsrc || meta.stored_flowdst != meta.current_flowdst ) { //if keys are different check counter
-
-			if (meta.flowKey_count == 0) { 
-
-				reg_flowsrc_row1.write(meta.hash0_value, meta.current_flowsrc);
-				reg_flowdst_row1.write(meta.hash0_value, meta.current_flowdst);
-				reg_flowKey_count_row1.write(meta.hash1_value, meta.flowKey_count + 1);
-
-			} else if (meta.flowKey_count > 0) { //if counter is not zero decrement counter by 1
-
-				reg_flowKey_count_row1.write(meta.hash1_value, meta.flowKey_count - 1);
-
-			}	
-
-		} else { // the current key corresponds to the stored key, then increment the counter
-
-			reg_flowKey_count_row1.write(meta.hash1_value, meta.flowKey_count + 1);
-		}
-	}
+control RevertRow1(inout metadata meta, inout headers hdr) {
+	apply{
+        meta.src_offset = SKETCH_WIDTH;
+        meta.dst_offset = 2*SKETCH_WIDTH;
+        //compare candidate flow key with current flow key
+        if (meta.epoch_bit == 0) {
+            reg_mv_sketch0_row1.read(meta.tempsrc, meta.hash1+meta.src_offset);
+            reg_mv_sketch0_row1.read(meta.tempdst, meta.hash1+meta.dst_offset);
+            reg_mv_sketch0_row1.read(meta.tempcount, meta.hash1);
+            if (meta.tempsrc!= hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
+                if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
+                    reg_mv_sketch0_row1.write(meta.hash1+meta.src_offset, hdr.ipv4.srcAddr);
+                    reg_mv_sketch0_row1.write(meta.hash1+meta.dst_offset, hdr.ipv4.dstAddr);
+                    meta.tempcount = 1;
+                    reg_mv_sketch0_row1.write(meta.hash1, meta.tempcount);
+                } else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
+                    meta.tempcount = meta.tempcount - 1;
+                    reg_mv_sketch0_row1.write(meta.hash1, meta.tempcount);
+                }		
+            } else { // if keys are equal increment counter by 1
+                meta.tempcount = meta.tempcount + 1;
+                reg_mv_sketch0_row1.write(meta.hash1, meta.tempcount);
+            }
+        } else {
+            reg_mv_sketch1_row1.read(meta.tempsrc, meta.hash1+meta.src_offset);
+            reg_mv_sketch1_row1.read(meta.tempdst, meta.hash1+meta.dst_offset);
+            reg_mv_sketch1_row1.read(meta.tempcount, meta.hash1);
+            if (meta.tempsrc != hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
+                if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
+                    reg_mv_sketch1_row1.write(meta.hash1+meta.src_offset, hdr.ipv4.srcAddr);
+                    reg_mv_sketch1_row1.write(meta.hash1+meta.dst_offset, hdr.ipv4.dstAddr);
+                    meta.tempcount = 1;
+                    reg_mv_sketch1_row1.write(meta.hash1, meta.tempcount);
+                } else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
+                    meta.tempcount = meta.tempcount - 1;
+                    reg_mv_sketch1_row1.write(meta.hash1, meta.tempcount);
+                }		
+            } else { // if keys are equal increment counter by 1
+                meta.tempcount = meta.tempcount + 1;
+                reg_mv_sketch1_row1.write(meta.hash1, meta.tempcount);
+            }
+        }
+    }
 }
 
-control RevertRow2(inout metadata meta) {
-
-apply {
-
-	    //compare candidate flow key with current flow key
-		reg_flowsrc_row2.read(meta.stored_flowsrc, meta.hash0_value);
-		reg_flowdst_row2.read(meta.stored_flowdst, meta.hash0_value);
-		reg_flowKey_count_row2.read(meta.flowKey_count, meta.hash2_value);
-
-		if ( meta.stored_flowsrc != meta.current_flowsrc || meta.stored_flowdst != meta.current_flowdst ) { //if keys are different check counter
-
-			if (meta.flowKey_count == 0) { 
-
-				reg_flowsrc_row2.write(meta.hash0_value, meta.current_flowsrc);
-				reg_flowdst_row2.write(meta.hash0_value, meta.current_flowdst);
-				reg_flowKey_count_row2.write(meta.hash2_value, meta.flowKey_count + 1);
-
-			} else if (meta.flowKey_count > 0) { //if counter is not zero decrement counter by 1
-
-				reg_flowKey_count_row2.write(meta.hash2_value, meta.flowKey_count - 1);
-
-			}	
-
-		} else { // the current key corresponds to the stored key, then increment the counter
-
-			reg_flowKey_count_row2.write(meta.hash2_value, meta.flowKey_count + 1);
-		}
-	}
+control RevertRow2(inout metadata meta, inout headers hdr) {
+	apply{
+        meta.src_offset = SKETCH_WIDTH;
+        meta.dst_offset = 2*SKETCH_WIDTH;
+        //compare candidate flow key with current flow key
+        if (meta.epoch_bit == 0) {
+            reg_mv_sketch0_row2.read(meta.tempsrc, meta.hash2+meta.src_offset);
+            reg_mv_sketch0_row2.read(meta.tempdst, meta.hash2+meta.dst_offset);
+            reg_mv_sketch0_row2.read(meta.tempcount, meta.hash2);
+            if (meta.tempsrc!= hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
+                if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
+                    reg_mv_sketch0_row2.write(meta.hash2+meta.src_offset, hdr.ipv4.srcAddr);
+                    reg_mv_sketch0_row2.write(meta.hash2+meta.dst_offset, hdr.ipv4.dstAddr);
+                    meta.tempcount = 1;
+                    reg_mv_sketch0_row2.write(meta.hash2, meta.tempcount);
+                } else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
+                    meta.tempcount = meta.tempcount - 1;
+                    reg_mv_sketch0_row2.write(meta.hash2, meta.tempcount);
+                }		
+            } else { // if keys are equal increment counter by 1
+                meta.tempcount = meta.tempcount + 1;
+                reg_mv_sketch0_row2.write(meta.hash2, meta.tempcount);
+            }
+        } else {
+            reg_mv_sketch1_row2.read(meta.tempsrc, meta.hash2+meta.src_offset);
+            reg_mv_sketch1_row2.read(meta.tempdst, meta.hash2+meta.dst_offset);
+            reg_mv_sketch1_row2.read(meta.tempcount, meta.hash2);
+            if (meta.tempsrc != hdr.ipv4.srcAddr || meta.tempdst != hdr.ipv4.dstAddr) { //if keys are different check counter
+                if (meta.tempcount == 0){ //if counter is zero, add new key and compute absolute value of the resulting subtraction 1 - count
+                    reg_mv_sketch1_row2.write(meta.hash2+meta.src_offset, hdr.ipv4.srcAddr);
+                    reg_mv_sketch1_row2.write(meta.hash2+meta.dst_offset, hdr.ipv4.dstAddr);
+                    meta.tempcount = 1;
+                    reg_mv_sketch1_row2.write(meta.hash2, meta.tempcount);
+                } else if (meta.tempcount > 0) { //if counter is not zero decrement counter by 1
+                    meta.tempcount = meta.tempcount - 1;
+                    reg_mv_sketch1_row2.write(meta.hash2, meta.tempcount);
+                }		
+            } else { // if keys are equal increment counter by 1
+                meta.tempcount = meta.tempcount + 1;
+                reg_mv_sketch1_row2.write(meta.hash2, meta.tempcount);
+            }
+        }
+    }
 }
