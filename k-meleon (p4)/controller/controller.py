@@ -18,7 +18,7 @@ class CMSController(object):
         self.set_hash = set_hash
         self.custom_calcs = self.controller.get_custom_crc_calcs()
         self.register_num =  len(self.custom_calcs)
-	self.width = width
+        self.width = width
         self.init()
         self.registers = []
         self.flag = None
@@ -40,10 +40,6 @@ class CMSController(object):
             i+=1
        
     def decode_registers(self):
-
-        """In the decoding function you were free to compute whatever you wanted.
-           This solution includes a very basic statistic, with the number of flows inside the confidence bound.
-        """
         self.read_registers()
         if self.registers[0] == None:
             return
@@ -57,50 +53,51 @@ class CMSController(object):
         self.registers[3] = aux
     
     def read_registers(self):
+        width = self.width
         self.registers = []
         self.registers.append(self.controller.register_read("reg_epoch_bit"))             #0 flag
         if self.registers[0] != self.flag:
             self.flag = self.registers[0]
             if (self.registers[0][0] == 0): #choose error and mv sketch
-                mv_sketch_row0 = self.controller.register_read("reg_mv_sketch1_row0")
-                mv_sketch_row1 = self.controller.register_read("reg_mv_sketch1_row1")
-                mv_sketch_row2 = self.controller.register_read("reg_mv_sketch1_row2")
-                err_sketch_row0 = self.controller.register_read("reg_error_sketch_row0")
-                err_sketch_row1 = self.controller.register_read("reg_error_sketch_row1")
-                err_sketch_row2 = self.controller.register_read("reg_error_sketch_row2")
-                self.registers.append(mv_sketch_row0[len(mv_sketch_row0)/3:2*(len(mv_sketch_row0)/3)])      #1 src ips
-                self.registers[1] = self.registers[1] + mv_sketch_row1[len(mv_sketch_row1)/3:2*(len(mv_sketch_row1)/3)]
-                self.registers[1] = self.registers[1] + mv_sketch_row2[len(mv_sketch_row2)/3:2*(len(mv_sketch_row2)/3)]
-                self.registers.append(mv_sketch_row0[2*(len(mv_sketch_row0)/3):3*(len(mv_sketch_row0)/3)])      #2 dst ips
-                self.registers[2] = self.registers[2] + mv_sketch_row1[2*(len(mv_sketch_row1)/3):3*(len(mv_sketch_row1)/3)]
-                self.registers[2] = self.registers[2] + mv_sketch_row2[2*(len(mv_sketch_row2)/3):3*(len(mv_sketch_row2)/3)]
-                self.registers.append(err_sketch_row0[(len(err_sketch_row0)/2):len(err_sketch_row0)])      #2 dst ips
-                self.registers[3] = self.registers[3] + err_sketch_row1[(len(err_sketch_row1)/2):len(err_sketch_row1)]
-                self.registers[3] = self.registers[3] + err_sketch_row2[(len(err_sketch_row2)/2):len(err_sketch_row2)]
-                self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
+                mv_row0 = self.controller.register_read("reg_mv_sketch1_row0")
+                mv_row1 = self.controller.register_read("reg_mv_sketch1_row1")
+                mv_row2 = self.controller.register_read("reg_mv_sketch1_row2")
+                err_row0 = self.controller.register_read("reg_error_sketch_row0")
+                err_row1 = self.controller.register_read("reg_error_sketch_row1")
+                err_row2 = self.controller.register_read("reg_error_sketch_row2")
 
-                print(self.registers[3])
+                self.registers.append(mv_row0[width:2*width])             #1 src ips
+                self.registers[1] = self.registers[1] + mv_row1[width:2*width]
+                self.registers[1] = self.registers[1] + mv_row2[width:2*width]
+                self.registers.append(mv_row0[2*width:3*width])           #2 dst ips
+                self.registers[2] = self.registers[2] + mv_row1[2*width:3*width]
+                self.registers[2] = self.registers[2] + mv_row2[2*width:3*width]
+                self.registers.append(err_row0[width:2*width])          #3 error sketch
+                self.registers[3] = self.registers[3] + err_row1[width:2*width]
+                self.registers[3] = self.registers[3] + err_row2[width:2*width]
+                self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
 
                 #reset mv keys and counters
                 self.controller.register_reset("reg_mv_sketch1_row0")
                 self.controller.register_reset("reg_mv_sketch1_row1")
                 self.controller.register_reset("reg_mv_sketch1_row2")
             else:
-                mv_sketch_row0 = self.controller.register_read("reg_mv_sketch0_row0")
-                mv_sketch_row1 = self.controller.register_read("reg_mv_sketch0_row1")
-                mv_sketch_row2 = self.controller.register_read("reg_mv_sketch0_row2")
-                err_sketch_row0 = self.controller.register_read("reg_error_sketch_row0")
-                err_sketch_row1 = self.controller.register_read("reg_error_sketch_row1")
-                err_sketch_row2 = self.controller.register_read("reg_error_sketch_row2")
-                self.registers.append(mv_sketch_row0[len(mv_sketch_row0)/3:2*(len(mv_sketch_row0)/3)])      #1 src ips
-                self.registers[1] = self.registers[1] + mv_sketch_row1[len(mv_sketch_row1)/3:2*(len(mv_sketch_row1)/3)]
-                self.registers[1] = self.registers[1] + mv_sketch_row2[len(mv_sketch_row2)/3:2*(len(mv_sketch_row2)/3)]
-                self.registers.append(mv_sketch_row0[2*(len(mv_sketch_row0)/3):len(mv_sketch_row0)])      #2 dst ips
-                self.registers[2] = self.registers[2] + mv_sketch_row1[2*(len(mv_sketch_row1)/3):len(mv_sketch_row1)]
-                self.registers[2] = self.registers[2] + mv_sketch_row2[2*(len(mv_sketch_row2)/3):len(mv_sketch_row2)]
-                self.registers.append(err_sketch_row0[0:(len(err_sketch_row2)/2)])      #2 dst ips
-                self.registers[3] = self.registers[3] + err_sketch_row1[0:(len(err_sketch_row2)/2)]
-                self.registers[3] = self.registers[3] + err_sketch_row2[0:(len(err_sketch_row2)/2)]
+                mv_row0 = self.controller.register_read("reg_mv_sketch0_row0")
+                mv_row1 = self.controller.register_read("reg_mv_sketch0_row1")
+                mv_row2 = self.controller.register_read("reg_mv_sketch0_row2")
+                err_row0 = self.controller.register_read("reg_error_sketch_row0")
+                err_row1 = self.controller.register_read("reg_error_sketch_row1")
+                err_row2 = self.controller.register_read("reg_error_sketch_row2")
+
+                self.registers.append(mv_row0[width:2*width])      #1 src ips
+                self.registers[1] = self.registers[1] + mv_row1[width:2*width]
+                self.registers[1] = self.registers[1] + mv_row2[width:2*width]
+                self.registers.append(mv_row0[2*width:3*width])      #2 dst ips
+                self.registers[2] = self.registers[2] + mv_row1[2*width:3*width]
+                self.registers[2] = self.registers[2] + mv_row2[2*width:3*width]
+                self.registers.append(err_row0[0:width])      #2 dst ips
+                self.registers[3] = self.registers[3] + err_row1[0:width]
+                self.registers[3] = self.registers[3] + err_row2[0:width]
                 self.registers.append(self.controller.register_read("reg_packet_changed"))  #4 total num packets
 
                 print(self.registers[3])

@@ -1,4 +1,10 @@
 /*********************************************************
+***************** BIT-SHIFT BLOCKS ******************
+**********************************************************/
+
+#include "includes/bit-shifts.p4"
+
+/*********************************************************
 ***************** MAIN UPDATE FUNCTION ********************
 **********************************************************/
 
@@ -17,8 +23,10 @@ control UpdateRow0(inout metadata meta) {
 
 
             // update forecast
-            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
-            meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
+            observedShift(meta);
+            forecastShift(meta);
+            //meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            //meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
             meta.new_forecast = meta.obs + meta.aux_forecast;           // alpha*S’o(t) + (1-alpha)*Sf(t)
 
             // Sf(t+1) = alpha*S’o(t) + (1-alpha)*Sf(t)
@@ -51,8 +59,9 @@ control UpdateRow0(inout metadata meta) {
                     reg_error_sketch_row0.write(meta.counter+meta.err_offset,meta.new_err_op);     // Se(t) = -Sf(t)
 
                     // update forecast
-                    meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
-                    reg_forecast_sketch_row0.write(meta.counter,meta.new_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
+                    forecastShift(meta); 
+                    //meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
+                    reg_forecast_sketch_row0.write(meta.counter,meta.aux_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
                 }
             }
         }
@@ -73,8 +82,10 @@ control UpdateRow1(inout metadata meta) {
             reg_error_sketch_row1.write(meta.hash1+meta.err_offset,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
 
             // update forecast
-            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
-            meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
+            observedShift(meta);
+            forecastShift(meta);
+            //meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            //meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
             meta.new_forecast = meta.obs + meta.aux_forecast;           // alpha*S’o(t) + (1-alpha)*Sf(t)
 
             // Sf(t+1) = alpha*S’o(t) + (1-alpha)*Sf(t)
@@ -108,8 +119,9 @@ control UpdateRow1(inout metadata meta) {
                     reg_error_sketch_row1.write(meta.counter+meta.err_offset,meta.new_err_op);     // Se(t) = -Sf(t)
 
                     // update forecast
-                    meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
-                    reg_forecast_sketch_row1.write(meta.counter,meta.new_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
+                    forecastShift(meta); 
+                    //meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
+                    reg_forecast_sketch_row1.write(meta.counter,meta.aux_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
                 }
             }
         }
@@ -130,8 +142,10 @@ control UpdateRow2(inout metadata meta) {
             reg_error_sketch_row2.write(meta.hash2+meta.err_offset,meta.new_err);  // Se(t) = S’o(t) - Sf(t)
 
             // update forecast
-            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
-            meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
+            observedShift(meta);
+            forecastShift(meta);            
+            //meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            //meta.aux_forecast = meta.forecast >> 1;                     // (1-alpha)*Sf(t)
             meta.new_forecast = meta.obs + meta.aux_forecast;           // alpha*S’o(t) + (1-alpha)*Sf(t)
 
             // Sf(t+1) = alpha*S’o(t) + (1-alpha)*Sf(t)
@@ -164,8 +178,9 @@ control UpdateRow2(inout metadata meta) {
                     reg_error_sketch_row2.write(meta.counter+meta.err_offset,meta.new_err_op);     // Se(t) = -Sf(t)
 
                     // update forecast
-                    meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
-                    reg_forecast_sketch_row2.write(meta.counter,meta.new_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
+                    forecastShift(meta); 
+                    //meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
+                    reg_forecast_sketch_row2.write(meta.counter,meta.aux_forecast);     // Sf(t+1) = (1 - alpha)*Sf(t)
                 }
             }
         }
