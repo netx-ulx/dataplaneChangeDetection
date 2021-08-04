@@ -8,7 +8,6 @@ header ethernet_t {
     bit<16> etherType;
 }
 
-
 header ipv4_t {
     bit<4>  version;
     bit<4>  ihl;
@@ -77,7 +76,6 @@ struct metadata {
 	bit<32> dst_offset;
 
     bit<1> mv;
-
 }
 
 struct headers {

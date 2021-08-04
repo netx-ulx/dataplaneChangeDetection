@@ -1,10 +1,10 @@
 <!-- PROJECT LOGO -->
 <p align="center">
 
-  <h3 align="center">Python implementation of %SOMENAME%</h3>
+  <h3 align="center">Python implementation of %K-MELEON%</h3>
 
   <p align="center">
-    An implementation of the %SOMENAME%.
+    An implementation of the %K-MELEON%.
   </p>
 </p>
 
@@ -34,7 +34,7 @@
 <!-- GETTING STARTED -->
 ## Getting Started
 
-We used python 3.8.5 to run this application. Other versions of python should run this solution but have not been tested.
+We used python 3.9.6 to run this application. Other versions of python should run this solution but have not been tested.
 
 <!-- PREREQUISITES -->
 ### Prerequisites

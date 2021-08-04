@@ -1,10 +1,10 @@
 <!-- PROJECT LOGO -->
 <p align="center">
 
-  <h3 align="center">Python implementation of %SOMENAME%</h3>
+  <h3 align="center">Python implementation of %K-MELEON%</h3>
 
   <p align="center">
-    An implementation of the %SOMENAME%.
+    An implementation of the %K-MELEON%.
   </p>
 </p>
 

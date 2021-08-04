@@ -1,14 +1,12 @@
 <!-- PROJECT LOGO -->
 <p align="center">
 
-  <h3 align="center">%SOMENAME%</h3>
+  <h3 align="center">%K-MELEON%</h3>
 
   <p align="center">
-    Implementation of the %SOMENAME%.
+    Implementation of the %K-MELEON%.
   </p>
 </p>
-
-
 
 <!-- TABLE OF CONTENTS -->
 ## Table of Contents
@@ -25,10 +23,9 @@
 ### Python Implementation [(here)](./python/)
 
 <!-- P4 IMPLEMENTATION -->
-### P4 Implementation [(here)](./p4/)
+### P4 Implementation [(here)](./k-meleon%20(p4)/)
 
 <!-- CONTACT -->
 ## Contact
 
 Gonçalo Matos -  goncalo.o.matos@tecnico.ulisboa.pt
-

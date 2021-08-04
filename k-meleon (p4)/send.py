@@ -3,7 +3,6 @@
 from scapy.all import *
 from scapy.utils import rdpcap
 import sys
-
 import time
 
 if len(sys.argv) < 2:

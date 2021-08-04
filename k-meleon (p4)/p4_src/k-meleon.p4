@@ -8,11 +8,9 @@
 #include "includes/headers.p4"
 #include "includes/registers.p4"
 
-
 /***************** PARSER *********************************/
 
 #include "includes/parser.p4"
-
 
 /*********************************************************
 ***************** CHECKSUM VERIFICATION *******************
@@ -28,13 +26,11 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 
 #include "includes/controls.p4"
 
-
 /*********************************************************
 ************** REVERSIBILITY CONTROL BLOCKS **************
 **********************************************************/
 
 #include "includes/reversibility.p4"
-
 
 /*********************************************************
 ***************** INGRESS PROCESSING *******************
@@ -55,8 +51,6 @@ control MyIngress(inout headers hdr,
 	RevertRow0() revert_row0;
 	RevertRow1() revert_row1;
 	RevertRow2() revert_row2;
-	
-	
 	
 	action drop() {
 	mark_to_drop(standard_metadata);
@@ -87,7 +81,6 @@ control MyIngress(inout headers hdr,
 	default_action = drop();
     }
 
-
     apply {
 		reg_total_num_packets.read(meta.num_packets,0);
 		meta.num_packets = meta.num_packets + 1;
@@ -101,7 +94,6 @@ control MyIngress(inout headers hdr,
 
 			/********************************************************/
 			/***************** EPOCH VERIFICATION *******************/
-
 
 			reg_epoch_value.read(meta.epoch_value,0);
 
@@ -193,7 +185,6 @@ control MyIngress(inout headers hdr,
 				update_row2.apply(meta);
 				revert_row2.apply(meta,hdr);
 			}
-
 		} else {
 			//reg_epoch.read(meta.epoch,0);
 			//meta.epoch = meta.epoch + 1;
@@ -201,8 +192,6 @@ control MyIngress(inout headers hdr,
 		}
     }
 }
-
-
 
 /*********************************************************
 ***************** EGRESS PROCESSING *******************
@@ -238,7 +227,6 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
     }
 }
 
-
 /*********************************************************
 ***************** DEPARSER *******************************
 **********************************************************/
@@ -249,10 +237,8 @@ control MyDeparser(packet_out packet, in headers hdr) {
 	packet.emit(hdr.ipv4);
         packet.emit(hdr.tcp);
         packet.emit(hdr.udp);
-
     }
 }
-
 
 /*********************************************************
 ***************** SWITCH *******************************
