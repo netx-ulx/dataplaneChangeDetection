@@ -57,8 +57,8 @@ This source code includes a few pre-processing directives meant to slightly cust
 - EPOCH_PKT/EPOCH_TS: you can decide to compute epochs based either on # of packets or on time intervals. Only one of this should be defined at each time, by the default EPOCH_TS is defined where EPOCH_PKT is not.
 
 To control the values of the above at compile time, you may simply use the -D option of the compiler. Example:
-
-$ p4c --target bmv2 --arch v1model -DEPOCH_TS p4_src/k-meleon.p4
+```
+    $ p4c --target bmv2 --arch v1model -DEPOCH_TS p4_src/k-meleon.p4
 ```
 
 <!-- RUN -->
@@ -66,19 +66,16 @@ $ p4c --target bmv2 --arch v1model -DEPOCH_TS p4_src/k-meleon.p4
 
 - Create virtual Ethernet devices with the script under your
   behavioral\_model directory
-
 ```
     $ sudo /home/vagrant/behavioral-model/tools/veth_setup.sh
 ```
 
 - Run the behavioral model 
-
 ```
     $ sudo simple_switch --log-console -i 0@veth2 -i 1@veth4 k-meleon.json
 ```
 
 - Send packets to the veth with the python script send.py
-
 ```
     $ sudo ./send.py ../traces/<filename>.pcap
 ```
@@ -89,7 +86,6 @@ $ p4c --target bmv2 --arch v1model -DEPOCH_TS p4_src/k-meleon.p4
 ```
 
 - Run the debugger
-
 ```
     $ sudo /home/vagrant/behavioral-model/tools/nanomsg_client.py --thrift-port 9090
 ```
