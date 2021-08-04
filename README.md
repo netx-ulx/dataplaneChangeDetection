@@ -1,10 +1,10 @@
 <!-- PROJECT LOGO -->
 <p align="center">
 
-  <h3 align="center">%K-MELEON%</h3>
+  <h3 align="center">K-MELEON</h3>
 
   <p align="center">
-    Implementation of the %K-MELEON%.
+    Implementation of the K-MELEON.
   </p>
 </p>
 
