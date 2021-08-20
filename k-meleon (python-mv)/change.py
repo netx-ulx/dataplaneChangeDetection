@@ -59,7 +59,7 @@ def removeDuplicates(lst):
       
     return list(set([i for i in lst]))
 
-def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets):
+def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets,mv):
     """Processes all packets running forecasting models and change detection mechanisms for every epoch.
 
     Parameters
@@ -98,7 +98,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
     #initialize sketch list
     sketch_list = [] #keeps current sketch [-1] and s past sketches
     for _ in range(0,s+1):
-        sketch_list.append(KAry_Sketch(kary_depth,kary_width))
+        sketch_list.append(KAry_Sketch(kary_depth,kary_width,mv))
 
     control = 1
     complex_result = []
@@ -124,13 +124,14 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
         if epoch_control == "time":
             if cur_epoch < packet["time"] - kary_epoch:
                 new_epoch = 1
+                cur_epoch = cur_epoch + kary_epoch
         else:
             if cur_epoch >= kary_epoch:
                 new_epoch = 1
+                cur_epoch = 0
 
         #Check if new packet is outside the current epoch
         if new_epoch == 1:
-            cur_epoch = 0
             epoch_counter = epoch_counter + 1
             part_result = None
             #Only perform change detection if t >= 2
@@ -144,10 +145,13 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
                 complex_res = []
                 res = []
                 keys = []
-
-                for row in sketch_list[-1].keys:
-                    for key in row:
-                        keys.append(key)
+                
+                if mv:
+                    for row in sketch_list[-1].keys:
+                        for key in row:
+                            keys.append(key)
+                else:
+                    keys = sketch_list[-1].keys
 
                 keys = removeDuplicates(keys)
                 if (None,None) in keys:
@@ -185,6 +189,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
 
         #UPDATE SKETCH
         sketch_list[-1].UPDATE(packet["key"],10,hash_func)
-        cur_epoch = cur_epoch + 1
+        if epoch_control != "time":
+            cur_epoch = cur_epoch + 1
 
     return complex_result, result

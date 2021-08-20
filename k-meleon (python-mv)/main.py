@@ -19,8 +19,8 @@ def main():
     supported_models = ["ma","ewma","nshw"]
 
     #-------------------------------------------- PROCESS INPUT --------------------------------------------#
-    short_options = "a:c:d:e:f:h:k:s:t:w:"                                                                                                                                         
-    long_options = ["help", "alpha=", "control=" "depth=", "epoch=", "fmodel=", "hash=", "key=", "saved=", "thresh=", "width="]
+    short_options = "a:c:d:e:f:h:k:m:s:t:w:"                                                                                                                                         
+    long_options = ["help", "alpha=", "control=" "depth=", "epoch=", "fmodel=", "hash=", "key=", "mv=" "saved=", "thresh=", "width="]
     # Get full command-line arguments but the first
     
     path = sys.argv[1]
@@ -68,6 +68,9 @@ def main():
                     print("Key value:", value, "not supported.")
                     sys.exit(2)
             key_format = current_value.split(",")
+        elif current_argument in ("-m", "--mv"):
+            print("Updating MV Sketch to", bool(int(current_value)))
+            mv = bool(int(current_value))
         elif current_argument in ("-s", "--saved"):
             print("Updating number of past sketches saved to", current_value)
             s = int(current_value)
@@ -101,7 +104,7 @@ def main():
     packets = parse(path)
     print("Finished parsing packets")
 
-    complex_result, _ = main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets)
+    complex_result, _ = main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets,mv)
     total_num_packets = 0
     with open('output/' + path[10:-5] + "-" + str(kary_epoch) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
       sys.stdout = f
