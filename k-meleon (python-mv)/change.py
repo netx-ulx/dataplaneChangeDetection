@@ -59,7 +59,7 @@ def removeDuplicates(lst):
       
     return list(set([i for i in lst]))
 
-def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets):
+def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets):
     """Processes all packets running forecasting models and change detection mechanisms for every epoch.
 
     Parameters
@@ -89,14 +89,11 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
 
     """
 
-    #print("Original!")
-
     epoch_counter = 0 #epoch counter
     forecast_sketch = None
     error_sketch = None
     threshold = None
     cur_epoch = None
-    epoch = 0
     
     #initialize sketch list
     sketch_list = [] #keeps current sketch [-1] and s past sketches
@@ -113,14 +110,28 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
         packet = extract(key_format,pkt)
         if packet == None:
             continue
+
+
+        # EPOCH CONTROL
         #first epoch starts at the time of the first packet
         if cur_epoch == None:
-            cur_epoch = packet["time"]
-            epoch = 1
+            if epoch_control == "time":
+                cur_epoch = packet["time"]
+            else:
+                cur_epoch = 0
+
+        new_epoch = 0
+        if epoch_control == "time":
+            if cur_epoch < packet["time"] - kary_epoch:
+                new_epoch = 1
+        else:
+            if cur_epoch >= kary_epoch:
+                new_epoch = 1
 
         #Check if new packet is outside the current epoch
-        if cur_epoch < packet["time"] - kary_epoch:
-            epoch_counter = 0
+        if new_epoch == 1:
+            cur_epoch = 0
+            epoch_counter = epoch_counter + 1
             part_result = None
             #Only perform change detection if t >= 2
             if control > 1:
@@ -143,7 +154,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
                     keys.remove((None,None))
 
                 part_result = {
-                    "epoch": [threshold,(epoch,cur_epoch),packet["time"],num_packets,len(keys)],
+                    "epoch": [threshold,(epoch_counter,epoch_counter),packet["time"],num_packets,len(keys)],
                     "res": None,
                     "TN": 0,
                 }
@@ -162,10 +173,6 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
                 result.append(res)
                 complex_result.append(part_result)
 
-            #print("Changing epoch ")
-            cur_epoch = packet["time"]
-            epoch = epoch + 1
-
             if control == 1:
                 control = 2
 
@@ -178,7 +185,6 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
 
         #UPDATE SKETCH
         sketch_list[-1].UPDATE(packet["key"],10,hash_func)
-
-        epoch_counter = epoch_counter + 1
+        cur_epoch = cur_epoch + 1
 
     return complex_result, result
