@@ -60,6 +60,12 @@ pip3 install statistics
 python main.py <filepath> [options]
 ```
 Options:
+     
+|        Flag | Usage                                                                                       |
+| -----------:|:------------------------------------------------------------------------------------------- |
+|    --approx | Activates approximations in the EWMA by performing floating-point operations via bit-shifts | 
+|        --mv | Activates the MJRTY as a reversibility mechanism for k-ary.                                 |
+
 
 |    long argument | short argument | value            | default                    |
 |    ------------- |:--------------:| ---------------- | -------------------------- |
