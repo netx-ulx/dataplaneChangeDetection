@@ -5,7 +5,7 @@ from math import sqrt
 import getopt, sys
 import binascii
 from kary_sketch import *
-from forecast_module import MA,EWMA,NSHW
+from forecast_module import MA,EWMA,EWMA_approx,NSHW
 from decimal import Decimal
 
 def extract(key_format,packet):
@@ -52,11 +52,14 @@ def change(forecast_sketch,observed_sketch,T):
     for i in range(0,depth):
         for j in range(0,width):
             new_error_sketch.sketch[i][j] = observed_sketch.sketch[i][j] - forecast_sketch.sketch[i][j]
-    moment = new_error_sketch.ESTIMATEF2()
-    TA = T * sqrt(moment)
-    return new_error_sketch, TA, moment
+    TA = T * sqrt(new_error_sketch.ESTIMATEF2())
+    return new_error_sketch, TA/10
 
-def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets):
+def removeDuplicates(lst):
+      
+    return list(set([i for i in lst]))
+
+def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets,mv,approx):
     """Processes all packets running forecasting models and change detection mechanisms for every epoch.
 
     Parameters
@@ -86,20 +89,19 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
 
     """
 
-    #print("Original!")
-
-    keys = set() #set used to save the keys that appeared during the epoch
     epoch_counter = 0 #epoch counter
     forecast_sketch = None
     error_sketch = None
     threshold = None
     cur_epoch = None
-    epoch = 0
+
+    trend_sketch = None #For use only with NSHW
+    smoothing_sketch = None #For use only with NSHW
     
     #initialize sketch list
     sketch_list = [] #keeps current sketch [-1] and s past sketches
     for _ in range(0,s+1):
-        sketch_list.append(KAry_Sketch(kary_depth,kary_width))
+        sketch_list.append(KAry_Sketch(kary_depth,kary_width,mv))
 
     control = 1
     complex_result = []
@@ -112,50 +114,78 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
         if packet == None:
             continue
 
+
+        # EPOCH CONTROL
         #first epoch starts at the time of the first packet
         if cur_epoch == None:
-            cur_epoch = packet["time"]
-            epoch = 1
+            if epoch_control == "time":
+                cur_epoch = packet["time"]
+            else:
+                cur_epoch = 0
+
+        new_epoch = 0
+        if epoch_control == "time":
+            if cur_epoch < packet["time"] - kary_epoch:
+                new_epoch = 1
+                cur_epoch = cur_epoch + kary_epoch
+        else:
+            if cur_epoch >= kary_epoch:
+                new_epoch = 1
+                cur_epoch = 0
 
         #Check if new packet is outside the current epoch
-        if cur_epoch < packet["time"] - kary_epoch:
-            epoch_counter = 0
+        if new_epoch == 1:
+            epoch_counter = epoch_counter + 1
             part_result = None
             #Only perform change detection if t >= 2
             if control > 1:
                 #FORECASTING
-                forecast_sketch = EWMA(forecast_sketch,sketch_list[-2],alpha)
+                if forecasting_model == "ma":
+                    forecast_sketch = MA(sketch_list,s)
+                elif forecasting_model == "ewma" and approx:
+                    forecast_sketch = EWMA_approx(forecast_sketch,sketch_list[-2],alpha)
+                elif forecasting_model == "ewma":
+                    forecast_sketch = EWMA(forecast_sketch,sketch_list[-2],alpha) 
+                elif forecasting_model == "nshw":
+                    forecast_sketch, smoothing_sketch, trend_sketch = NSHW(forecast_sketch,sketch_list[-2],sketch_list[-1],trend_sketch,smoothing_sketch,alpha,beta)
 
                 #CHANGE DETECTION
-                error_sketch, threshold, moment = change(forecast_sketch,sketch_list[-1],T)
-                #print("Threshold =", threshold, "Time:",cur_epoch)
-
-                part_result = {
-                    "epoch": [threshold,(epoch,cur_epoch),packet["time"],num_packets,len(keys)],
-                    "res": None,
-                    "TN": 0,
-                    "moment": moment
-                }
+                error_sketch, threshold = change(forecast_sketch,sketch_list[-1],T)
 
                 complex_res = []
                 res = []
-                #error_sketch.SHOW()
+                keys = []
+                
+                if mv:
+                    for row in sketch_list[-1].keys:
+                        for key in row:
+                            keys.append(key)
+                else:
+                    keys = sketch_list[-1].keys
+
+                keys = removeDuplicates(keys)
+                if (None,None) in keys:
+                    keys.remove((None,None))
+
+                part_result = {
+                    "epoch": [threshold,(epoch_counter,epoch_counter),packet["time"],num_packets,len(keys)],
+                    "res": None,
+                    "TN": 0,
+                }
+
                 for key in keys:
-                    estimate = error_sketch.ESTIMATE(key,hash_func)
-                    #print(estimate)
-                        
-                    if estimate > threshold:
-                        complex_res.append(key + (str(estimate),))
-                        res.append(key)
-                        #print("Change detected for:", key, "with estimate:", estimate)
+                    if key[0] != None and key[1] != None:
+                        estimate = error_sketch.ESTIMATE(key,hash_func)/10
+                        #print(estimate)
+                        if estimate > threshold:
+                            complex_res.append(key + (str(estimate),))
+                            res.append(key)
+                            #print("Change detected for:", key, "with estimate:", estimate)
+
                 part_result["res"] = complex_res
                 part_result["numKeys"] = len(keys)
                 result.append(res)
                 complex_result.append(part_result)
-
-            #print("Changing epoch ")
-            cur_epoch = packet["time"]
-            epoch = epoch + 1
 
             if control == 1:
                 control = 2
@@ -165,14 +195,10 @@ def main_cycle(kary_depth,kary_width,kary_epoch,alpha,beta,T,s,hash_func,forecas
                 sketch_list[i] = deepcopy(sketch_list[i+1])
 
             sketch_list[-1].RESET()
-            keys.clear()
             
-
         #UPDATE SKETCH
-        sketch_list[-1].UPDATE(packet["key"],1,hash_func)
-
-        #STORE KEY FOR CHANGE DETECTION
-        keys.add(packet["key"])
-        epoch_counter = epoch_counter + 1
+        sketch_list[-1].UPDATE(packet["key"],10,hash_func)
+        if epoch_control != "time":
+            cur_epoch = cur_epoch + 1
 
     return complex_result, result

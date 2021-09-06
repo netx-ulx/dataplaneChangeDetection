@@ -86,6 +86,59 @@ def EWMA(previous_forecast_sketch,previous_observed_sketch,alpha):
     else:
         return copy.deepcopy(previous_observed_sketch)
 
+def EWMA_approx(previous_forecast_sketch,previous_observed_sketch,alpha):
+    """Uses the Exponentially Weighted Moving Average Model to build the forecast sketch from the previous forecast and observed sketch
+
+    Parameters
+    ----------
+    previous_forecast_sketch : KAry_Sketch
+        A forecast sketch
+    previous_observed_sketch : KAry_Sketch
+        An observed sketch
+    alpha : float
+        The alpha value to be used by the EWMA
+
+    Returns
+    -------
+    KAry_Sketch
+        The forecast sketch
+    """
+
+    depth = len(previous_observed_sketch.sketch)
+    width = len(previous_observed_sketch.sketch[0])
+    new_forecast_sketch = KAry_Sketch(depth,width)
+    if previous_forecast_sketch != None:
+        for i in range(0,depth):
+            for j in range(0,width):
+                observed = 0
+                forecast = 0
+                if alpha == 0.125:
+                    observed = int(previous_observed_sketch.sketch[i][j] >> 3)
+                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 2) + int(previous_forecast_sketch.sketch[i][j] >> 3)
+                elif alpha == 0.25:
+                    observed = int(previous_observed_sketch.sketch[i][j] >> 2)
+                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 2)
+                elif alpha == 0.375:
+                    observed = int(previous_observed_sketch.sketch[i][j] >> 2) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 3)
+                elif alpha == 0.5:
+                    observed = int(previous_observed_sketch.sketch[i][j] >> 1)
+                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 1)
+                elif alpha == 0.625:
+                    observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 2) + int(previous_forecast_sketch.sketch[i][j] >> 3)
+                elif alpha == 0.75:
+                    observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 2)
+                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 2)
+                elif alpha == 0.875:
+                    observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 2) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 3)
+
+                new_forecast_sketch.sketch[i][j] = observed + forecast
+        return new_forecast_sketch
+    else:
+        return copy.deepcopy(previous_observed_sketch)
+
 def NSHW(previous_forecast_sketch,previous_observed_sketch,observed_sketch,previous_trend,previous_smoothing,alpha,beta):
     """Uses the Non-Seasonal Holt-Winters Model to build the forecast sketch from the previous forecast, observed sketch, trend and smoothing
 

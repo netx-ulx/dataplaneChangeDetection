@@ -8,6 +8,7 @@ from crc import Crc
 import socket, struct, pickle, os
 import ipaddress 
 import time
+import mmh3
 
 crc32_polinomials = [0x04C11DB7, 0xEDB88320, 0xDB710641, 0x82608EDB, 0x741B8CD7, 0xEB31D82E,
                     0xD663B05, 0xBA0DC66B, 0x32583499, 0x992C1A4C, 0x32583499, 0x992C1A4C]
@@ -76,8 +77,8 @@ class KAry_Sketch:
                     self.counts[i].append(0)
         
         #initialize the hash seeds for each row
-        #for i in range(0,depth):
-            #self.seeds.append(mmh3.hash64("K-ARY SKETCH",i)[0])
+        for i in range(0,depth):
+            self.seeds.append(mmh3.hash64("K-ARY SKETCH",i)[0])
 
         self.init()
 
@@ -101,6 +102,8 @@ class KAry_Sketch:
             bucket = None
             if hash_func == "crc32":
                 bucket = self.get_index(key)[i]
+            elif hash_func == "murmur3":
+                bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
             #Update K-ary
             self.sketch[i][bucket] = self.sketch[i][bucket] + value
             
@@ -138,8 +141,8 @@ class KAry_Sketch:
             bucket = None
             if hash_func == "crc32":
                 bucket = self.get_index(key)[i]
-            #elif hash_func == "murmur3":
-                #bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
+            elif hash_func == "murmur3":
+                bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
             result.append((self.sketch[i][bucket] - (self.sum(i)/self.width)) / (1 - (1/self.width)))
         return median(result)
 
@@ -180,8 +183,8 @@ class KAry_Sketch:
             bucket = None
             if hash_func == "crc32":
                 bucket = self.get_index(key)[i]
-            #elif hash_func == "murmur3":
-                #bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
+            elif hash_func == "murmur3":
+                bucket = mmh3.hash64(','.join(key),self.seeds[i])[0]%self.width
             buckets.append(bucket)
             result.append(self.sketch[i][bucket])
         return result,buckets
