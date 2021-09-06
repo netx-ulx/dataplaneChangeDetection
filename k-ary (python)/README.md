@@ -63,16 +63,16 @@ Options:
 
 |    long argument | short argument | value            | default                    |
 |    ------------- |:--------------:| ---------------- | -------------------------- |
-|    `--alpha`     | `-a`           | positive float   |  0.7                       |
+|    `--alpha`     | `-a`           | positive float   |  0.5                       |
 |    `--control`   | `-c`           | string           |  time, packets             |     
-|    `--depth`     | `-d`           | positive integer |  5                         |     
-|    `--epoch`     | `-e`           | positive float   |  0.1                       |     
+|    `--depth`     | `-d`           | positive integer |  3                         |     
+|    `--epoch`     | `-e`           | positive float   |  20                        |     
 |    `--fmodel`    | `-f`           | string           |  ewma                      |     
 |    `--hash`      | `-h`           | string           |  murmur3                   |     
-|    `--key`       | `-k`           | opts...          |  src,dst,sport,dport,proto |        
+|    `--key`       | `-k`           | opts...          |  src,dst                   |        
 |    `--saved`     | `-s`           | positive integer |  1                         |     
-|    `--thresh`    | `-t`           | positive float   |  0.1                       |     
-|    `--width`     | `-w`           | positive integer |  5462                      |    
+|    `--thresh`    | `-t`           | positive float   |  0.5                       |     
+|    `--width`     | `-w`           | positive integer |  64                        |    
 
 * Output
 ```sh
