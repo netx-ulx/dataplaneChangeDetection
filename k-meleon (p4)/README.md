@@ -82,7 +82,7 @@ To control the values of the above at compile time, you may simply use the -D op
 
 - Run the thrift controller with python3
 ```
-    $ python3 controller.py [--options]
+    $ python3 controller.py [--options][--epoch;--depth;--thresh;--width;--port]
 ```
 
 - Run the debugger

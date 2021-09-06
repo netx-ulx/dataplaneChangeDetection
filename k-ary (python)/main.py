@@ -96,8 +96,6 @@ def main():
                     "--fmodel         -f              string              ewma                           \n",
                     "--hash           -h              string              murmur3,crc32                  \n",
                     "--key            -k              opts...             src,dst,sport,dport,proto      \n",
-                    "--mv             -m              bool                0,1                            \n",
-                    "--path           -p              string              traces/trace1.pcap             \n",
                     "--saved          -s              positive integer    1                              \n",
                     "--thresh         -t              positive float      0.5                            \n",
                     "--width          -w              positive integer    64                             \n",

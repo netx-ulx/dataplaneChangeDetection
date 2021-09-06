@@ -1,10 +1,10 @@
 <!-- PROJECT LOGO -->
 <p align="center">
 
-  <h3 align="center">Python implementation of K-MELEON</h3>
+  <h3 align="center">Python implementation of K-ARY</h3>
 
   <p align="center">
-    An implementation of the K-MELEON.
+    An implementation of the K-ARY.
   </p>
 </p>
 
@@ -19,13 +19,13 @@
 
 ---
 ## Files
-- change.py
+- change.py: Program control
 - forecast-module.py: Implementation of forecasting models in python.
 - kary_sketch.py: K-ary sketch data-structure implementation.
-- main.py
-- new_change.py 
+- main.py: Main program. Input and output processing. 
 - pcap_parser.py: .pcap file packet parser.
-- test.py
+- crc.py: Implementation of the CRC32custom algorithm.
+- test.py: Testing program.
 ---
 
 <!-- ABOUT THE PROJECT -->
@@ -34,7 +34,7 @@
 <!-- GETTING STARTED -->
 ## Getting Started
 
-We used python 3.8.5 to run this application. Other versions of python should run this solution but have not been tested.
+We used python 3.9.6 to run this application. Other versions of python should run this solution but have not been tested.
 
 <!-- PREREQUISITES -->
 ### Prerequisites
@@ -63,7 +63,8 @@ Options:
 
 |    long argument | short argument | value            | default                    |
 |    ------------- |:--------------:| ---------------- | -------------------------- |
-|    `--alpha`     | `-a`           | positive float   |  0.7                       |     
+|    `--alpha`     | `-a`           | positive float   |  0.7                       |
+|    `--control`   | `-c`           | string           |  time, packets             |     
 |    `--depth`     | `-d`           | positive integer |  5                         |     
 |    `--epoch`     | `-e`           | positive float   |  0.1                       |     
 |    `--fmodel`    | `-f`           | string           |  ewma                      |     

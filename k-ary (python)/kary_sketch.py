@@ -109,7 +109,7 @@ class KAry_Sketch:
             
             if self.mv:
                 #Update MV
-                if self.keys[i][bucket][0] == key[0] and self.keys[i][bucket][1] == key[1]:
+                if self.keys[i][bucket] == key:
                     self.counts[i][bucket] = self.counts[i][bucket] + 1
                 else:
                     self.counts[i][bucket] = self.counts[i][bucket] - 1

@@ -15,6 +15,12 @@ def extract(key_format,packet):
             key.append(packet["key"]["src"])
         if elem == "dst":
             key.append(packet["key"]["dst"])
+        if elem == "dport":
+            key.append(packet["key"]["dport"])
+        if elem == "sport":
+            key.append(packet["key"]["sport"])
+        if elem == "proto":
+            key.append(packet["key"]["proto"])
     
     new_packet = {
         "key": tuple(key),
@@ -22,7 +28,7 @@ def extract(key_format,packet):
         "time": packet["time"]
     }
 
-    if key[0] == None or key[1] == None:
+    if any(v is None for v in key):
         return None
 
     return new_packet
@@ -36,13 +42,15 @@ def change(forecast_sketch,observed_sketch,T):
         A forecast sketch
     observed_sketch : KAry_Sketch
         An observed sketch
+    T : float
+        The threshold
 
     Returns
     -------
     KAry_Sketch
         The forecast error sketch
-    dict
-        The packet with a key, the time of the packet, and its size.
+    TA 
+        The application threshold
     """
 
     depth = len(observed_sketch.sketch)
@@ -70,6 +78,8 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
         The width of the K-ary Sketch
     kary_epoch : int
         The num of packets per epoch
+    epoch_control : str
+        The epoch control type (time or num packets)
     alpha : float
         Alpha to be used by the EWMA and NSHW
     beta : float
@@ -86,10 +96,14 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
         A list of key options to be used
     packets : RAW Packets
         All packets from Scapy
+    mv : bool
+        flag to use the mjrty from the mv sketch
+    approx : bool
+        flag to use the approximations from the p4 version
 
     """
 
-    epoch_counter = 0 #epoch counter
+    epoch_counter = -1 #epoch counter
     forecast_sketch = None
     error_sketch = None
     threshold = None
@@ -174,7 +188,8 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
                 }
 
                 for key in keys:
-                    if key[0] != None and key[1] != None:
+                    
+                    if not any(v is None for v in key):
                         estimate = error_sketch.ESTIMATE(key,hash_func)/10
                         #print(estimate)
                         if estimate > threshold:

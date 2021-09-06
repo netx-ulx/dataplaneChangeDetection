@@ -87,7 +87,7 @@ def EWMA(previous_forecast_sketch,previous_observed_sketch,alpha):
         return copy.deepcopy(previous_observed_sketch)
 
 def EWMA_approx(previous_forecast_sketch,previous_observed_sketch,alpha):
-    """Uses the Exponentially Weighted Moving Average Model to build the forecast sketch from the previous forecast and observed sketch
+    """Uses the Exponentially Weighted Moving Average Model with bit-shifts to build the forecast sketch from the previous forecast and observed sketch
 
     Parameters
     ----------
