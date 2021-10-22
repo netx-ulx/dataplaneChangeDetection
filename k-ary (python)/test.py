@@ -10,14 +10,14 @@ def cycle(arguments):
     targets = arguments[0]
     thresholds = arguments[1] 
     kary_epoch = arguments[4]
-    alpha = arguments[5]
-    beta = arguments[6]
-    key_format = arguments[11]
+    alpha = arguments[6]
+    beta = arguments[7]
+    key_format = arguments[12]
     results = []
     #TEST ALL THRESHOLDS
     for threshold in thresholds:
         speed = []
-        arguments[7] = threshold
+        arguments[8] = threshold
         false_positives = 0
         attacks_found = 0
         true_positives = 0
@@ -50,7 +50,7 @@ def cycle(arguments):
                             true_positives = true_positives + 1
             to_remove = []
             for target in cycle_targets:
-                if float(epoch["epoch"][1][1]) - kary_epoch <= float(target[1]) and float(epoch["epoch"][1][1]) + kary_epoch >= float(target[1]): #If known attack is present in the changes for its epoch   
+                if float(epoch["epoch"][1][1]) - 2*kary_epoch <= float(target[1]) and float(epoch["epoch"][1][1]) + kary_epoch >= float(target[1]): #If known attack is present in the changes for its epoch   
                     for change in epoch["res"]:
                         if target[0] in change:
                             attacks_found = attacks_found + 1
@@ -61,8 +61,8 @@ def cycle(arguments):
             accuracies.append((epoch["numKeys"] - len(epoch["res"]))/epoch["numKeys"])
         sys.stdout.flush()
         #If the attack was not found for a given threshold, skip same configuration for bigger thresholds
-        #if true_positives == 0:
-            #break
+        if true_positives == 0:
+            break
         
         false_negatives = len(cycle_targets)
         true_negatives = num_keys - (false_negatives+false_positives+true_positives)
@@ -73,30 +73,36 @@ def cycle(arguments):
             precision = 0
         else:
             precision = true_positives / (true_positives + false_positives)
-
-        recall = true_positives/(true_positives+false_negatives)
         
-        if arguments[10] == "nshw":
-            print([round(false_positives/len(complex_result),3),round(mean(accuracies),3),round(precision,3),round(recall,3),false_positives,true_positives,false_negatives,attacks_found,[alpha,beta,threshold,key_format],speed])
-            results.append([false_positives/len(complex_result),mean(accuracies),precision,recall,false_positives,true_positives,[alpha,beta,threshold,key_format]])
+        recall = 0
+        if true_positives+false_negatives != 0:
+            recall = true_positives/(true_positives+false_negatives)
+        
+        if arguments[11] == "nshw":
+            print([round(false_positives/len(complex_result),3),round(mean(accuracies),3),round(precision,3),round(recall,3),false_positives,true_positives,false_negatives,attacks_found,[alpha,beta,threshold,len(key_format)],speed])
+            results.append([false_positives/len(complex_result),mean(accuracies),precision,recall,false_positives,true_positives,[alpha,beta,threshold,len(key_format)]])
         else:
-            print(["{:.3f}".format(accuracy),"{:.3f}".format(precision),"{:.3f}".format(recall),false_positives,true_positives,false_negatives,true_negatives,[kary_epoch,alpha,threshold,key_format],attacks_found,speed])
+            print(["{:.3f}".format(accuracy),"{:.3f}".format(precision),"{:.3f}".format(recall),false_positives,true_positives,false_negatives,true_negatives,[kary_epoch,alpha,threshold,len(key_format)],attacks_found,speed])
             #print([false_positives/len(complex_result),mean(accuracies),precision,recall,false_positives,true_positives,attacks_found,len(cycle_targets),[kary_epoch,alpha,threshold,key_format],speed])
-            results.append([accuracy,precision,recall,false_positives,true_positives,[kary_epoch,alpha,threshold,key_format],speed])
+            results.append([accuracy,precision,recall,false_positives,true_positives,[kary_epoch,alpha,threshold,len(key_format)],speed])
     return results
 
 def main():
     #------------------------------------------ DEFAULT PARAMETERS ------------------------------------------#
 
-    kary_depth = 3 #number of rows
-    kary_width = 64 #number of buckets in each row
+    kary_depth = 5 #number of rows
+    kary_width = 5462 #number of buckets in each row
     kary_epoch = 20 #seconds per epoch
     beta = 0.7 #beta to be used by the NSHW
     s = 1 #number of past sketches saved for forecast (=1 for EWMA)
-    hash_func = "crc32" #hashing algorithm to be used by the sketch module
+    hash_func = "murmur3" #hashing algorithm to be used by the sketch module
     forecasting_model = "ewma" #forecasting model to be used by the forecasting module
     supported_hashes = ["murmur3","crc32"]
     supported_models = ["ewma","nshw"]
+
+    epoch_control = "time"
+    mv = False
+    approx = False
 
     #-------------------------------------------- PROCESS INPUT --------------------------------------------#
 
@@ -174,11 +180,11 @@ def main():
     sys.stdout.flush()
     #--------------------------------------------- PARAMETERS FOR TESTING --------------------------------------------#
 
-    alphas = [0.5,0.625]
+    alphas = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
-    epochs = [0.1,1,10,60,120,240]
-    thresholds = [0.45,0.6,0.8]
-    keys = [["src","dst"]]
+    epochs = [20]
+    thresholds = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    keys = [["src", "sport", "dst", "dport", "proto"],["dst", "proto"],["src", "dst", "proto"]] 
 
     
     #------------------------------------ PREPARING ARGUMENTS FOR PARALLELIZATION ------------------------------------#
@@ -189,7 +195,7 @@ def main():
         for key_format in keys:
             for alpha in alphas:
                 for kary_epoch in epochs:
-                    arguments.append([targets,thresholds,kary_depth,kary_width,kary_epoch,alpha,beta,None,s,hash_func,forecasting_model,key_format,packets]) 
+                    arguments.append([targets,thresholds,kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,None,s,hash_func,forecasting_model,key_format,packets,mv,approx]) 
     #---------------------------------------------- PARALLEL EXECUTION  ----------------------------------------------#
 
     pool = Pool(processes=6)
@@ -205,23 +211,23 @@ def main():
     
     #------------------------------------------- CHOOSE BEST CONFIGURATION -------------------------------------------#
 
-    sorted_results = sorted(final_results, key=itemgetter(0))
+    sorted_results = sorted(final_results,reverse=True, key=itemgetter(1))
     best = None
     for result in sorted_results:
-        if result[3] > 0:
+        if result[2] > 0:
             if best == None:
-                print("Best combination:",result[0],result[1],result[2],result[3],result[4],result[5],result[6])
+                print("Best Precision combination:",result[0],result[1],result[2],result[3],result[4],result[5],result[6])
                 best = result[0]
                 #print("Sorted Results:",sorted_results)
             elif result[0] == best:
-                print("Other best combinations:",result[0],result[1],result[2],result[3],result[4],result[5],result[6])
+                print("Other Precision best combinations:",result[0],result[1],result[2],result[3],result[4],result[5],result[6])
             else:
                 break
 
-    sorted_results = sorted(final_results,reverse=True,key=itemgetter(1))
+    sorted_results = sorted(final_results,reverse=True,key=itemgetter(0))
     best = None
     for result in sorted_results:
-        if result[3] > 0:
+        if result[2] > 0:
             if best == None:
                 print("Best Accuracy combination:",result[0],result[1],result[2],result[3],result[4],result[5],result[6])
                 best = result[0]

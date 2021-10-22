@@ -62,14 +62,16 @@ def parse_p4(file):
 
 def main():
     path = sys.argv[1]
-    p4_file = open("python-approx/output/" + path, 'r')
-    python_file = open("python-p4/output/" + path, 'r')
+
+    p4_file = open("python/" + path, 'r')
+    python_file = open("p4/" + path, 'r')
 
     p4_thresholds, p4_changes = parse_python(p4_file)
     python_thresholds, python_changes = parse_python(python_file)
 
     threshold_errors = []
     threshold_percent_errors = []
+    threshold_reldiff = []
     estimate_errors = []
     estimate_percent_errors = []
 
@@ -79,6 +81,7 @@ def main():
 
     for i in range(len(p4_thresholds)):
         threshold_errors.append(float(python_thresholds[i][3]) - float(p4_thresholds[i][3]))
+        threshold_reldiff.append((float(python_thresholds[i][3]) - float(p4_thresholds[i][3]))/float(python_thresholds[i][3]))
         threshold_percent_errors.append((float(p4_thresholds[i][3]) - float(python_thresholds[i][3])) / float(p4_thresholds[i][3]))
 
     for i in range(len(p4_changes)):
@@ -97,11 +100,15 @@ def main():
                     break
             if found == False:
                 false_positives = false_positives + 1
-    print("Threshold Percent Error:", mean(threshold_percent_errors)*100, "%")
-    print("Estimate Percent Error:", mean(estimate_percent_errors)*100, "%")
-    print("False Positives:",false_positives)
-    print("False Negatives:",less_detections+false_positives)
-    print("True Positives:", true_positives)
+
+    for error in threshold_reldiff:
+        print(error*100)
+
+    #print("Threshold Percent Error:", mean(threshold_percent_errors)*100, "%")
+    #print("Estimate Percent Error:", mean(estimate_percent_errors)*100, "%")
+    #print("False Positives:",false_positives)
+    #print("False Negatives:",less_detections+false_positives)
+    #print("True Positives:", true_positives)
         
 if __name__ == "__main__":
     main()

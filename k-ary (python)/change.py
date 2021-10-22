@@ -104,6 +104,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
     """
 
     epoch_counter = -1 #epoch counter
+    epoch_start_time = 0
     forecast_sketch = None
     error_sketch = None
     threshold = None
@@ -136,6 +137,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
                 cur_epoch = packet["time"]
             else:
                 cur_epoch = 0
+            epoch_start_time = packet["time"]
 
         new_epoch = 0
         if epoch_control == "time":
@@ -182,13 +184,12 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
                     keys.remove((None,None))
 
                 part_result = {
-                    "epoch": [threshold,(epoch_counter,epoch_counter),packet["time"],num_packets,len(keys)],
+                    "epoch": [threshold,(epoch_counter,epoch_start_time),packet["time"],num_packets,len(keys)],
                     "res": None,
                     "TN": 0,
                 }
 
                 for key in keys:
-                    
                     if not any(v is None for v in key):
                         estimate = error_sketch.ESTIMATE(key,hash_func)/10
                         #print(estimate)
@@ -209,6 +210,8 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
             for i in range(0,s):
                 sketch_list[i] = deepcopy(sketch_list[i+1])
 
+            epoch_start_time = epoch_start_time + kary_epoch
+            
             sketch_list[-1].RESET()
             
         #UPDATE SKETCH

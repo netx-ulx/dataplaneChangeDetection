@@ -111,13 +111,23 @@ def main():
 
     complex_result, _ = main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets,mv,approx)
     total_num_packets = 0
-    with open('output/' + path[10:-5] + "-" + str(kary_epoch) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
-      sys.stdout = f
-      for epoch in complex_result:
-        print("Epoch:", epoch["epoch"][1][1], "      " + "Threshold: " + str(epoch["epoch"][0]), "      " + "Num Packets: " + str(epoch["epoch"][3]))
-        print(epoch["res"])
-        total_num_packets = total_num_packets + int(epoch["epoch"][4])
-        print("Num Keys:",str(epoch["epoch"][4]))
+    
+    if approx:
+        with open('output/' + path[10:-5] + "-" + "approx" + "-" + str(alpha) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
+            sys.stdout = f
+            for epoch in complex_result:
+                print("Epoch:", epoch["epoch"][1][0], "      " + "Threshold: " + str(epoch["epoch"][0]), "      " + "Num Packets: " + str(epoch["epoch"][3]))
+                print(epoch["res"])
+                total_num_packets = total_num_packets + int(epoch["epoch"][4])
+                print("Num Keys:",str(epoch["epoch"][4]))
+    else:
+        with open('output/' + path[10:-5] + '-' + str(alpha) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
+            sys.stdout = f
+            for epoch in complex_result:
+                print("Epoch:", epoch["epoch"][1][0], "      " + "Threshold: " + str(epoch["epoch"][0]), "      " + "Num Packets: " + str(epoch["epoch"][3]))
+                print(epoch["res"])
+                total_num_packets = total_num_packets + int(epoch["epoch"][4])
+                print("Num Keys:",str(epoch["epoch"][4]))
 
     sys.stdout = original_stdout
     print("Total Num Keys:",total_num_packets)

@@ -59,9 +59,9 @@ def extract(key_format,packet):
     key = {
         "src": src,
         "dst": dst,
-        "sport": sport,
-        "dport": dport,
-        "proto": proto
+        "sport": str(sport),
+        "dport": str(dport),
+        "proto": str(proto)
     }
     
     packet = {
