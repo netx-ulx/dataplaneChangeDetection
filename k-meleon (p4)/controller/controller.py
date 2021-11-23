@@ -1,9 +1,8 @@
 from kary_sketch import *
-#from p4utils.utils.topology import Topology
-from p4utils.utils.sswitch_API import *
+from p4utils.utils.sswitch_thrift_API import *
 from crc import Crc
 import socket, struct, pickle, os
-import ipaddress 
+import ipaddress
 import time
 import itertools
 
@@ -14,7 +13,7 @@ class CMSController(object):
 
     def __init__(self,width,port,set_hash):
         self.max_int = 4294967296
-        self.controller = SimpleSwitchAPI(port)
+        self.controller = SimpleSwitchThriftAPI(port)
         self.set_hash = set_hash
         self.custom_calcs = self.controller.get_custom_crc_calcs()
         self.register_num =  len(self.custom_calcs)
@@ -38,7 +37,7 @@ class CMSController(object):
         for custom_crc32, _width in sorted(self.custom_calcs.items()):
             self.controller.set_crc32_parameters(custom_crc32, crc32_polinomials[i], 0xffffffff, 0xffffffff, True, True)
             i+=1
-       
+
     def decode_registers(self):
         self.read_registers()
         if self.registers[0] == None:
@@ -51,7 +50,7 @@ class CMSController(object):
             else:
                 aux.append(value)
         self.registers[3] = aux
-    
+
     def read_registers(self):
         width = self.width
         self.registers = []
@@ -105,7 +104,7 @@ class CMSController(object):
                 #reset mv keys and counters
                 self.controller.register_reset("reg_mv_sketch0_row0")
                 self.controller.register_reset("reg_mv_sketch0_row1")
-                self.controller.register_reset("reg_mv_sketch0_row2")   
+                self.controller.register_reset("reg_mv_sketch0_row2")
         else:
             self.registers[0] = None
 
@@ -123,7 +122,7 @@ class CMSController(object):
         splited = []
         width = len(self.registers[3])/depth
         for i in range(0,depth):
-            splited.append(self.registers[3][i*width:((i+1)*width)])
+            splited.append(self.registers[3][int(i*width):int(((i+1)*width))])
         return splited, self.registers[1], self.registers[2], self.registers[4]
 
 if __name__ == "__main__":
@@ -141,7 +140,7 @@ if __name__ == "__main__":
 
     epoch = -1
     while(True):
-        #retrieve data from data plane    
+        #retrieve data from data plane
         controller.decode_registers()
 
         #check if a new epoch as been captured
@@ -182,7 +181,7 @@ if __name__ == "__main__":
                 indexes.append("0")
 
         k = []
-        for i in range(0,len(str_dst)): 
+        for i in range(0,len(str_dst)):
             k.append([str_src[i],str_dst[i],indexes[i]])
 
         keys = []
@@ -207,7 +206,7 @@ if __name__ == "__main__":
                     changes.append((keys[i][0],keys[i][1],estimate,keys[i][2]))
                     #print("Change detected for:", keys[i][0] + "," + keys[i][1], "with estimate:", estimate)
 
-        #write changes to file            
+        #write changes to file
         with open("controller.out",'a') as f:
             f.write("Epoch: " + str(epoch) + "       " + "Threshold: " + str(TA) + "       " + "Num Packets: " + str(num_packets[0]) +'\n')
             f.write("Change: " + str(changes) + '\n')

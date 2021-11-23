@@ -11,7 +11,7 @@ class KAry_Sketch:
 
     Attributes
     ----------
-    depth : int 
+    depth : int
         The depth of the sketch: number of rows
     width : int
         The width of the sketch: number of buckets in each row
@@ -36,12 +36,12 @@ class KAry_Sketch:
         """
         Parameters
         ----------
-        depth : int 
+        depth : int
             The depth of the sketch: number of rows
         width : int
             The width of the sketch: number of buckets in each row
         """
-        
+
         self.depth = depth
         self.width = width
         self.sketch = []
@@ -60,11 +60,11 @@ class KAry_Sketch:
 
         Parameters
         ----------
-        key : tuple 
+        key : tuple
             A five-tuple key (src,dst,sport,dport,proto)
-        hash_func : string 
+        hash_func : string
             The hash function to be used
-        
+
         Returns
         -------
         float
@@ -79,7 +79,7 @@ class KAry_Sketch:
 
     def sum(self,i):
         """Calculates the sum of all values in the sketch
-        
+
         Returns
         -------
         float
@@ -89,7 +89,7 @@ class KAry_Sketch:
 
     def ESTIMATEF2(self):
         """Calculates the estimated second moment (F2) of the sketch
-        
+
         Returns
         -------
         float
@@ -100,8 +100,8 @@ class KAry_Sketch:
         for i in range(0,self.depth):
             aux = 0.0
             for j in range(0,self.width):
-                aux = aux + (self.sketch[i][j]**2) 
-	    result.append(((float(self.width)/(float(self.width)-1.0))*float(aux)) - ((1.0/(float(self.width)-1.0))*(self.sum(i)**2.0)))
+                aux = aux + (self.sketch[i][j]**2)
+            result.append(((float(self.width)/(float(self.width)-1.0))*float(aux)) - ((1.0/(float(self.width)-1.0))*(self.sum(i)**2.0)))
         return median(result)
 
     def COMBINE(self,sketch):
