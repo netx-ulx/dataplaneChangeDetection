@@ -61,7 +61,7 @@ def change(forecast_sketch,observed_sketch,T):
         for j in range(0,width):
             new_error_sketch.sketch[i][j] = observed_sketch.sketch[i][j] - forecast_sketch.sketch[i][j]
     TA = T * sqrt(new_error_sketch.ESTIMATEF2())
-    return new_error_sketch, TA/10
+    return new_error_sketch, TA/8
 
 def removeDuplicates(lst):
       
@@ -191,7 +191,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
 
                 for key in keys:
                     if not any(v is None for v in key):
-                        estimate = error_sketch.ESTIMATE(key,hash_func)/10
+                        estimate = error_sketch.ESTIMATE(key,hash_func)/8
                         #print(estimate)
                         if estimate > threshold:
                             complex_res.append(key + (str(estimate),))
@@ -215,7 +215,7 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
             sketch_list[-1].RESET()
             
         #UPDATE SKETCH
-        sketch_list[-1].UPDATE(packet["key"],10,hash_func)
+        sketch_list[-1].UPDATE(packet["key"],8,hash_func)
         if epoch_control != "time":
             cur_epoch = cur_epoch + 1
 
