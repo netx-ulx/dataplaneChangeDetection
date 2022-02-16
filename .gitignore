@@ -2,3 +2,5 @@ vm/.vagrant/
 *.pyc
 *.out
 *.pcap
+k-meleon-tofino/p4_build.sh
+k-meleon/p4_build.sh

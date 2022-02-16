@@ -213,7 +213,7 @@ cd ../..
 find /usr/lib /usr/local $HOME/.local | sort > $HOME/usr-local-6-after-p4c.txt
 
 # --- Mininet --- #
-git clone git://github.com/mininet/mininet mininet
+git clone https://github.com/mininet/mininet mininet
 cd mininet
 PATCH_DIR="${HOME}/patches"
 patch -p1 < "${PATCH_DIR}/mininet-dont-install-python2.patch" || echo "Errors while attempting to patch mininet, but continuing anyway ..."
@@ -225,7 +225,7 @@ sudo ./mininet/util/install.sh -nw
 find /usr/lib /usr/local $HOME/.local | sort > $HOME/usr-local-7-after-mininet-install.txt
 
 # --- PTF --- #
-git clone git://github.com/p4lang/ptf
+git clone https://github.com/p4lang/ptf
 cd ptf
 git checkout ${PTF_COMMIT}
 sudo python3 setup.py install

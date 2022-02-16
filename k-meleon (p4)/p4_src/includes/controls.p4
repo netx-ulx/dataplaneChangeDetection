@@ -38,7 +38,7 @@ control UpdateRow0(inout metadata meta) {
 
             // update forecast
             reg_forecast_sketch_row0.read(meta.forecast,meta.hash0);    // Sf(t+1)
-            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            observedShift(meta);                                        // alpha*S’o(t)
             meta.new_forecast = meta.obs + meta.forecast;               // Sf(t+1) + alpha*S’o(t)
 
             // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
@@ -97,7 +97,7 @@ control UpdateRow1(inout metadata meta) {
 
             // update forecast
             reg_forecast_sketch_row1.read(meta.forecast,meta.hash1);    // Sf(t+1)
-            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            observedShift(meta);                                        // alpha*S’o(t)
             meta.new_forecast = meta.obs + meta.forecast;               // Sf(t+1) + alpha*S’o(t)
             
             // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
@@ -156,7 +156,7 @@ control UpdateRow2(inout metadata meta) {
 
             // update forecast
             reg_forecast_sketch_row2.read(meta.forecast,meta.hash2);    // Sf(t+1)
-            meta.obs = SKETCH_UPDATE >> 1;                              // alpha*S’o(t)
+            observedShift(meta);                                        // alpha*S’o(t)
             meta.new_forecast = meta.obs + meta.forecast;               // Sf(t+1) + alpha*S’o(t)
             
             // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
