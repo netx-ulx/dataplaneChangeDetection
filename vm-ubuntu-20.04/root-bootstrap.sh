@@ -17,7 +17,6 @@ apt-get update
 KERNEL=$(uname -r)
 DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
 apt-get install -y --no-install-recommends --fix-missing\
-  atom \
   autoconf \
   automake \
   bison \
@@ -27,7 +26,6 @@ apt-get install -y --no-install-recommends --fix-missing\
   cmake \
   cpp \
   curl \
-  emacs \
   flex \
   g++ \
   git \
@@ -56,7 +54,6 @@ apt-get install -y --no-install-recommends --fix-missing\
   libtool-bin \
   linux-headers-$KERNEL\
   llvm \
-  lubuntu-desktop \
   make \
   net-tools \
   pkg-config \
@@ -67,7 +64,6 @@ apt-get install -y --no-install-recommends --fix-missing\
   tcpdump \
   unzip \
   valgrind \
-  vim \
   wget \
   xcscope-el \
   xterm
@@ -142,13 +138,6 @@ echo "p4:p4" | chpasswd
 echo "p4 ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/99_p4
 chmod 440 /etc/sudoers.d/99_p4
 usermod -aG vboxsf p4
-
-cd /usr/share/lubuntu/wallpapers/
-cp /home/vagrant/p4-logo.png .
-rm lubuntu-default-wallpaper.png
-ln -s p4-logo.png lubuntu-default-wallpaper.png
-rm /home/vagrant/p4-logo.png
-cd ~
 
 # 2021-Mar-06 this command failed with an error that the file did not exist.
 #sed -i s@#background=@background=/usr/share/lubuntu/wallpapers/1604-lubuntu-default-wallpaper.png@ /etc/lightdm/lightdm-gtk-greeter.conf
