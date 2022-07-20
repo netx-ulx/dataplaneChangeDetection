@@ -16,13 +16,17 @@ def main():
     epoch_control = "time"
     mv = False
     approx = False
+    skip = False
+    no_reset = False
+
+    output_name = ""
 
     supported_hashes = ["murmur3","crc32"]
     supported_models = ["ma","ewma","nshw"]
 
     #-------------------------------------------- PROCESS INPUT --------------------------------------------#
     short_options = "a:c:d:e:f:h:k:s:t:w:"                                                                                                                                         
-    long_options = ["help","approx", "alpha=", "control=" "depth=", "epoch=", "fmodel=", "hash=", "key=", "mv", "saved=", "thresh=", "width="]
+    long_options = ["help","approx", "skip", "no_reset", "alpha=", "control=" "depth=", "epoch=", "fmodel=", "hash=", "key=", "mv", "saved=", "thresh=", "width="]
     # Get full command-line arguments but the first
     
     path = sys.argv[1]
@@ -40,22 +44,28 @@ def main():
         if current_argument in ("-a", "--alpha"):
             print("Updating alpha to", current_value)
             alpha = float(current_value)
+            output_name = output_name + "-a" + str(alpha) + "-"
         elif current_argument in ("--approx"):
             print("Updating Approximations to", True)
             approx = True
+            output_name = output_name + "-approx-"
         elif current_argument in ("-c", "--control"):
             print("Updating epoch control to", current_value)
             epoch_control = current_value
+            output_name = output_name + "-" + current_value + "-"
         elif current_argument in ("-d", "--depth"):
             print("Updating depth to", current_value)
             kary_depth = int(current_value)
+            output_name = output_name + "-d" + str(kary_depth) + "-"
         elif current_argument in ("-e", "--epoch"):
             print("Updating epoch to", current_value)
             kary_epoch = int(current_value)
+            output_name = output_name + "-e" + str(kary_epoch) + "-"
         elif current_argument in ("-f", "--fmodel"):
             if current_value in supported_models:
                 print("Updating forecasting model to", current_value)
                 forecasting_model = current_value
+                output_name = output_name + "-" + current_value + "-"
             else:
                 print("Forecasting Model:", current_value, "not supported.")
                 sys.exit(2)
@@ -63,6 +73,7 @@ def main():
             if current_value in supported_hashes:
                 print("Updating Hash function to", current_value)
                 hash_func = current_value
+                output_name = output_name + "-" + current_value + "-"
             else:
                 print("Hash Function:", current_value, "not supported.")
                 sys.exit(2)
@@ -73,18 +84,31 @@ def main():
                     print("Key value:", value, "not supported.")
                     sys.exit(2)
             key_format = current_value.split(",")
+            output_name = output_name + '-' + '-'.join(key_format) + '-'
         elif current_argument in ("--mv"):
             print("Updating MV Sketch to", True)
             mv = True
+            output_name = output_name + '-mv-'
+        elif current_argument in ("--no_reset"):
+            print("Only resetting cells touched by the observed values")
+            no_reset = True
+            output_name = output_name + '-no_reset-'            
         elif current_argument in ("-s", "--saved"):
             print("Updating number of past sketches saved to", current_value)
             s = int(current_value)
+            output_name = output_name + "-s" + str(i) + "-"
+        elif current_argument in ("--skip"):
+            print("Skipping first iteration of forecast model")
+            skip = True
+            output_name = output_name + '-skip-'
         elif current_argument in ("-t", "--thresh"):
             print("Updating Threshold to", current_value)
             T = float(current_value)
+            output_name = output_name + '-t' + current_value + '-'
         elif current_argument in ("-w", "--width"):
             print("Updating width to", current_value)
             kary_width = int(current_value)
+            output_name = output_name + '-w' + current_value + '-'
         elif current_argument in ("--help"):
             print  ("------------------------------------------------------------------------------------\n",
                     "long argument   short argument  value               default                         \n",
@@ -109,27 +133,29 @@ def main():
     packets = parse(path)
     print("Finished parsing packets")
 
-    complex_result, _ = main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets,mv,approx)
+    complex_result, _ = main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets,mv,approx,skip,no_reset)
     total_num_packets = 0
     
     if approx:
-        with open('output/' + path[10:-5] + "-" + "approx" + "-" + str(alpha) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
+        with open('output/' + path[10:-5] + output_name + '.out', 'w') as f:
             sys.stdout = f
             for epoch in complex_result:
-                print("Epoch:", epoch["epoch"][1][0], "      " + "Threshold: " + str(epoch["epoch"][0]), "      " + "Num Packets: " + str(epoch["epoch"][3]))
-                print(epoch["res"])
+                print(epoch["epoch"][0])
+                #print("Epoch:", epoch["epoch"][1][0], "      " + "Threshold: " + str(epoch["epoch"][0]), "      " + "Num Packets: " + str(epoch["epoch"][3]))
+                #print(epoch["res"])
                 total_num_packets = total_num_packets + int(epoch["epoch"][4])
-                print("Num Keys:",str(epoch["epoch"][4]))
+                #print("Num Keys:",str(epoch["epoch"][4]))
     else:
-        with open('output/' + path[10:-5] + '-' + str(kary_epoch) + '-' + forecasting_model + '-' + hash_func + '-' + '-'.join(key_format) + '-' + str(T) + '.out', 'w') as f:
+        with open('output/' + path[10:-5] + output_name + '.out', 'w') as f:
             sys.stdout = f
             for epoch in complex_result:
-                print("Epoch:", epoch["epoch"][1][0], "      " + "Threshold: " + str(epoch["epoch"][0]), "      " + "Num Packets: " + str(epoch["epoch"][3]))
-                print(epoch["res"])
+                print(epoch["epoch"][0])
+                #print("Epoch:", epoch["epoch"][1][0], "      " + "Threshold: " + str(epoch["epoch"][0]), "      " + "Num Packets: " + str(epoch["epoch"][3]))
+                #print(epoch["res"])
                 total_num_packets = total_num_packets + int(epoch["epoch"][4])
-                print("Num Keys:",str(epoch["epoch"][4]))
+                #print("Num Keys:",str(epoch["epoch"][4]))
 
     sys.stdout = original_stdout
-    print("Total Num Keys:",total_num_packets)
+    #print("Total Num Keys:",total_num_packets)
 if __name__ == "__main__":
   main()

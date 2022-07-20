@@ -103,6 +103,8 @@ def main():
     epoch_control = "time"
     mv = False
     approx = False
+    skip = False
+    no_reset=False
 
     #-------------------------------------------- PROCESS INPUT --------------------------------------------#
 
@@ -195,7 +197,7 @@ def main():
         for key_format in keys:
             for alpha in alphas:
                 for kary_epoch in epochs:
-                    arguments.append([targets,thresholds,kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,None,s,hash_func,forecasting_model,key_format,packets,mv,approx]) 
+                    arguments.append([targets,thresholds,kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,None,s,hash_func,forecasting_model,key_format,packets,mv,approx,skip,no_reset]) 
     #---------------------------------------------- PARALLEL EXECUTION  ----------------------------------------------#
 
     pool = Pool(processes=6)

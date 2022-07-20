@@ -57,7 +57,7 @@ def SMA(sketch_list,w,weigths):
             new_forecast_sketch.sketch[i][j] = _sum / sum(weigths)
     return new_forecast_sketch
 
-def EWMA(previous_forecast_sketch,previous_observed_sketch,alpha):
+def EWMA(previous_forecast_sketch,previous_observed_sketch,alpha,skip,no_reset):
     """Uses the Exponentially Weighted Moving Average Model to build the forecast sketch from the previous forecast and observed sketch
 
     Parameters
@@ -81,12 +81,24 @@ def EWMA(previous_forecast_sketch,previous_observed_sketch,alpha):
     if previous_forecast_sketch != None:
         for i in range(0,depth):
             for j in range(0,width):
-                new_forecast_sketch.sketch[i][j] = (alpha*previous_observed_sketch.sketch[i][j]) + ((1-alpha)*previous_forecast_sketch.sketch[i][j])
+                if no_reset:
+                    if previous_observed_sketch.sketch[i][j] == 0:
+                        new_forecast_sketch.sketch[i][j] = previous_forecast_sketch.sketch[i][j]            # Does not execute forecast computations for cells not touched
+                    else:
+                        new_forecast_sketch.sketch[i][j] = (alpha*previous_observed_sketch.sketch[i][j]) + ((1-alpha)*previous_forecast_sketch.sketch[i][j])    # Executes normally because cell was touched
+                else:
+                    new_forecast_sketch.sketch[i][j] = (alpha*previous_observed_sketch.sketch[i][j]) + ((1-alpha)*previous_forecast_sketch.sketch[i][j])
         return new_forecast_sketch
     else:
-        return copy.deepcopy(previous_observed_sketch)
+        if skip:
+            for i in range(0,depth):
+                for j in range(0,width):
+                    new_forecast_sketch.sketch[i][j] = (alpha*previous_observed_sketch.sketch[i][j]) + 0
+            return new_forecast_sketch
+        else:
+            return copy.deepcopy(previous_observed_sketch)
 
-def EWMA_approx(previous_forecast_sketch,previous_observed_sketch,alpha):
+def EWMA_approx(previous_forecast_sketch,previous_observed_sketch,alpha,skip,no_reset):
     """Uses the Exponentially Weighted Moving Average Model with bit-shifts to build the forecast sketch from the previous forecast and observed sketch
 
     Parameters
@@ -110,34 +122,95 @@ def EWMA_approx(previous_forecast_sketch,previous_observed_sketch,alpha):
     if previous_forecast_sketch != None:
         for i in range(0,depth):
             for j in range(0,width):
-                observed = 0
-                forecast = 0
-                if alpha == 0.125:
-                    observed = int(previous_observed_sketch.sketch[i][j] >> 3)
-                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 2) + int(previous_forecast_sketch.sketch[i][j] >> 3)
-                elif alpha == 0.25:
-                    observed = int(previous_observed_sketch.sketch[i][j] >> 2)
-                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 2)
-                elif alpha == 0.375:
-                    observed = int(previous_observed_sketch.sketch[i][j] >> 2) + int(previous_observed_sketch.sketch[i][j] >> 3)
-                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 3)
-                elif alpha == 0.5:
-                    observed = int(previous_observed_sketch.sketch[i][j] >> 1)
-                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 1)
-                elif alpha == 0.625:
-                    observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 3)
-                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 2) + int(previous_forecast_sketch.sketch[i][j] >> 3)
-                elif alpha == 0.75:
-                    observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 2)
-                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 2)
-                elif alpha == 0.875:
-                    observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 2) + int(previous_observed_sketch.sketch[i][j] >> 3)
-                    forecast = int(previous_forecast_sketch.sketch[i][j] >> 3)
+                if no_reset:
+                    if previous_observed_sketch.sketch[i][j] == 0:
+                        new_forecast_sketch.sketch[i][j] = previous_forecast_sketch.sketch[i][j]
+                    else:
+                        observed = 0
+                        forecast = 0
+                        if alpha == 0.125:
+                            observed = int(previous_observed_sketch.sketch[i][j] >> 3)
+                            forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 2) + int(previous_forecast_sketch.sketch[i][j] >> 3)
+                        elif alpha == 0.25:
+                            observed = int(previous_observed_sketch.sketch[i][j] >> 2)
+                            forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 2)
+                        elif alpha == 0.375:
+                            observed = int(previous_observed_sketch.sketch[i][j] >> 2) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                            forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 3)
+                        elif alpha == 0.5:
+                            observed = int(previous_observed_sketch.sketch[i][j] >> 1)
+                            forecast = int(previous_forecast_sketch.sketch[i][j] >> 1)
+                        elif alpha == 0.625:
+                            observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                            forecast = int(previous_forecast_sketch.sketch[i][j] >> 2) + int(previous_forecast_sketch.sketch[i][j] >> 3)
+                        elif alpha == 0.75:
+                            observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 2)
+                            forecast = int(previous_forecast_sketch.sketch[i][j] >> 2)
+                        elif alpha == 0.875:
+                            observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 2) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                            forecast = int(previous_forecast_sketch.sketch[i][j] >> 3)
 
-                new_forecast_sketch.sketch[i][j] = observed + forecast
+                        new_forecast_sketch.sketch[i][j] = observed + forecast
+                else:
+                    observed = 0
+                    forecast = 0
+                    if alpha == 0.125:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 3)
+                        forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 2) + int(previous_forecast_sketch.sketch[i][j] >> 3)
+                    elif alpha == 0.25:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 2)
+                        forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 2)
+                    elif alpha == 0.375:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 2) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                        forecast = int(previous_forecast_sketch.sketch[i][j] >> 1) + int(previous_forecast_sketch.sketch[i][j] >> 3)
+                    elif alpha == 0.5:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 1)
+                        forecast = int(previous_forecast_sketch.sketch[i][j] >> 1)
+                    elif alpha == 0.625:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                        forecast = int(previous_forecast_sketch.sketch[i][j] >> 2) + int(previous_forecast_sketch.sketch[i][j] >> 3)
+                    elif alpha == 0.75:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 2)
+                        forecast = int(previous_forecast_sketch.sketch[i][j] >> 2)
+                    elif alpha == 0.875:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 2) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                        forecast = int(previous_forecast_sketch.sketch[i][j] >> 3)
+
+                    new_forecast_sketch.sketch[i][j] = observed + forecast
+
         return new_forecast_sketch
     else:
-        return copy.deepcopy(previous_observed_sketch)
+        if skip:
+            for i in range(0,depth):
+                for j in range(0,width):
+                    observed = 0
+                    forecast = 0
+                    if alpha == 0.125:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 3)
+                        forecast = 0
+                    elif alpha == 0.25:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 2)
+                        forecast = 0
+                    elif alpha == 0.375:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 2) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                        forecast = 0
+                    elif alpha == 0.5:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 1)
+                        forecast = 0
+                    elif alpha == 0.625:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                        forecast = 0
+                    elif alpha == 0.75:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 2)
+                        forecast = 0
+                    elif alpha == 0.875:
+                        observed = int(previous_observed_sketch.sketch[i][j] >> 1) + int(previous_observed_sketch.sketch[i][j] >> 2) + int(previous_observed_sketch.sketch[i][j] >> 3)
+                        forecast = 0
+
+                    new_forecast_sketch.sketch[i][j] = observed + forecast
+            return new_forecast_sketch
+        else:
+            return copy.deepcopy(previous_observed_sketch)
 
 def NSHW(previous_forecast_sketch,previous_observed_sketch,observed_sketch,previous_trend,previous_smoothing,alpha,beta):
     """Uses the Non-Seasonal Holt-Winters Model to build the forecast sketch from the previous forecast, observed sketch, trend and smoothing

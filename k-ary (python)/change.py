@@ -33,7 +33,7 @@ def extract(key_format,packet):
 
     return new_packet
 
-def change(forecast_sketch,observed_sketch,T):
+def change(forecast_sketch,observed_sketch,old_error,T,no_reset):
     """Constructs the forecast error sketch and chooses an alarm threshold, based on the second moment of the forecast error sketch.
 
     Parameters
@@ -59,7 +59,16 @@ def change(forecast_sketch,observed_sketch,T):
     new_error_sketch = KAry_Sketch(depth,width)
     for i in range(0,depth):
         for j in range(0,width):
-            new_error_sketch.sketch[i][j] = observed_sketch.sketch[i][j] - forecast_sketch.sketch[i][j]
+            if no_reset:
+                if observed_sketch.sketch[i][j] == 0:
+                    if old_error != None:
+                        new_error_sketch.sketch[i][j] = old_error.sketch[i][j]
+                    else:
+                        new_error_sketch.sketch[i][j] = 0
+                else:
+                    new_error_sketch.sketch[i][j] = observed_sketch.sketch[i][j] - forecast_sketch.sketch[i][j]
+            else:
+                new_error_sketch.sketch[i][j] = observed_sketch.sketch[i][j] - forecast_sketch.sketch[i][j]
     TA = T * sqrt(new_error_sketch.ESTIMATEF2())
     return new_error_sketch, TA/8
 
@@ -67,7 +76,7 @@ def removeDuplicates(lst):
       
     return list(set([i for i in lst]))
 
-def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets,mv,approx):
+def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,hash_func,forecasting_model,key_format,packets,mv,approx,skip,no_reset):
     """Processes all packets running forecasting models and change detection mechanisms for every epoch.
 
     Parameters
@@ -159,14 +168,14 @@ def main_cycle(kary_depth,kary_width,kary_epoch,epoch_control,alpha,beta,T,s,has
                 if forecasting_model == "ma":
                     forecast_sketch = MA(sketch_list,s)
                 elif forecasting_model == "ewma" and approx:
-                    forecast_sketch = EWMA_approx(forecast_sketch,sketch_list[-2],alpha)
+                    forecast_sketch = EWMA_approx(forecast_sketch,sketch_list[-2],alpha,skip,no_reset)
                 elif forecasting_model == "ewma":
-                    forecast_sketch = EWMA(forecast_sketch,sketch_list[-2],alpha) 
+                    forecast_sketch = EWMA(forecast_sketch,sketch_list[-2],alpha,skip,no_reset) 
                 elif forecasting_model == "nshw":
                     forecast_sketch, smoothing_sketch, trend_sketch = NSHW(forecast_sketch,sketch_list[-2],sketch_list[-1],trend_sketch,smoothing_sketch,alpha,beta)
 
                 #CHANGE DETECTION
-                error_sketch, threshold = change(forecast_sketch,sketch_list[-1],T)
+                error_sketch, threshold = change(forecast_sketch,sketch_list[-1],error_sketch,T,no_reset)
 
                 complex_res = []
                 res = []
