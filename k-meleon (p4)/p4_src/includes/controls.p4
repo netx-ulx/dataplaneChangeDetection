@@ -43,26 +43,6 @@ control UpdateRow0(inout metadata meta) {
 
             // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
             reg_forecast_sketch_row0.write(meta.hash0,meta.new_forecast);
-
-            // compute one extra op
-            reg_extraOp_counter.read(meta.counter,0);
-            if (meta.counter < SKETCH_WIDTH) {
-                reg_extraOp_counter.write(0,meta.counter+1);
-                reg_controlFlag_sketch_row0.read(meta.ctrl,meta.counter);               // Sc(t)
-                if (meta.ctrl != meta.epoch_bit) { // If diff, copy forecast_sketch
-                    reg_controlFlag_sketch_row0.write(meta.counter,meta.epoch_bit);     // Sc(t) = !Sc(t)
-                    reg_forecast_sketch_row0.read(meta.forecast,meta.counter);          // Sf(t) 
-
-                    // update error
-                    meta.new_err_op = -meta.forecast;                                               // -Sf(t)
-                    reg_error_sketch_row0.write(meta.counter+meta.err_offset,meta.new_err_op);      // Se(t) = -Sf(t)
-
-                    // update forecast
-                    forecastShift(meta); 
-                    //meta.new_forecast = meta.forecast >> 1;                               // (1 - alpha)*Sf(t)
-                    reg_forecast_sketch_row0.write(meta.counter,meta.aux_forecast);         // Sf(t+1) = (1 - alpha)*Sf(t)
-                }
-            }
         }
     }
 }
@@ -102,26 +82,6 @@ control UpdateRow1(inout metadata meta) {
             
             // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
             reg_forecast_sketch_row1.write(meta.hash1,meta.new_forecast); 
-
-            // compute one extra op
-            reg_extraOp_counter.read(meta.counter,1);
-            if (meta.counter < SKETCH_WIDTH) {
-                reg_extraOp_counter.write(1,meta.counter+1);
-                reg_controlFlag_sketch_row1.read(meta.ctrl,meta.counter);               // Sc(t)
-                if (meta.ctrl != meta.epoch_bit) { // If diff, copy forecast_sketch
-                    reg_controlFlag_sketch_row1.write(meta.counter,meta.epoch_bit);     // Sc(t) = !Sc(t)
-                    reg_forecast_sketch_row1.read(meta.forecast,meta.counter);          // Sf(t) 
-
-                    // update error
-                    meta.new_err_op = -meta.forecast;                                               // -Sf(t)
-                    reg_error_sketch_row1.write(meta.counter+meta.err_offset,meta.new_err_op);      // Se(t) = -Sf(t)
-
-                    // update forecast
-                    forecastShift(meta); 
-                    //meta.new_forecast = meta.forecast >> 1;                             // (1 - alpha)*Sf(t)
-                    reg_forecast_sketch_row1.write(meta.counter,meta.aux_forecast);       // Sf(t+1) = (1 - alpha)*Sf(t)
-                }
-            }
         }
     }
 }
@@ -160,27 +120,7 @@ control UpdateRow2(inout metadata meta) {
             meta.new_forecast = meta.obs + meta.forecast;               // Sf(t+1) + alpha*S’o(t)
             
             // Sf(t+1) = Sf(t+1) + alpha*S’o(t)
-            reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast); 
-
-            // compute one extra op
-            reg_extraOp_counter.read(meta.counter,2);
-            if (meta.counter < SKETCH_WIDTH) {
-                reg_extraOp_counter.write(2,meta.counter+1);
-                reg_controlFlag_sketch_row2.read(meta.ctrl,meta.counter);                   // Sc(t)
-                if (meta.ctrl != meta.epoch_bit) { // If diff, copy forecast_sketch
-                    reg_controlFlag_sketch_row2.write(meta.counter,meta.epoch_bit);         // Sc(t) = !Sc(t)
-                    reg_forecast_sketch_row2.read(meta.forecast,meta.counter);              // Sf(t) 
-
-                    // update error
-                    meta.new_err_op = -meta.forecast;                                               // -Sf(t)
-                    reg_error_sketch_row2.write(meta.counter+meta.err_offset,meta.new_err_op);      // Se(t) = -Sf(t)
-
-                    // update forecast
-                    forecastShift(meta); 
-                    //meta.new_forecast = meta.forecast >> 1;                               // (1 - alpha)*Sf(t)
-                    reg_forecast_sketch_row2.write(meta.counter,meta.aux_forecast);         // Sf(t+1) = (1 - alpha)*Sf(t)
-                }
-            }
+            reg_forecast_sketch_row2.write(meta.hash2,meta.new_forecast);
         }
     }
 }
